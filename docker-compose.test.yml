@@ -10,7 +10,7 @@ services:
     depends_on:
       - test-db
   test-db:
-    image: docker.io/library/mariadb:latest
+    image: docker.io/library/mariadb:11.8
     ports:
       - 5593:5593
     environment:

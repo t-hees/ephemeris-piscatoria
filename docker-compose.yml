@@ -1,26 +1,35 @@
-version: "3.8"
+# Ports are only bound to 127.0.0.1: docker bypasses host firewalls
 services:
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    ports:
-      - ${BACKEND_PORT}:${BACKEND_PORT}
+    restart: unless-stopped
     environment:
       DB_HOST: db
-      DB_PORT: ${DB_PORT}
+      # Port inside the compose network, DB_PORT is only the port published on the host
+      DB_PORT: 3306
       DB_DBNAME: ${DB_DBNAME}
       DB_USERNAME: ${DB_USERNAME}
       DB_PASSWORD: ${DB_PASSWORD}
       BACKEND_PORT: ${BACKEND_PORT}
       JWT_SECRET: ${JWT_SECRET}
+      # Optional, an admin account is created on startup if both are set
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+      # Optional, registration has no captcha without them
+      TURNSTILE_SITE_KEY: ${TURNSTILE_SITE_KEY:-}
+      TURNSTILE_SECRET: ${TURNSTILE_SECRET:-}
+      # Optional, how long accounts of regular users live (ISO-8601 duration, 0 keeps them forever)
+      DEMO_USER_TTL: ${DEMO_USER_TTL:-PT1H}
     depends_on:
       - db
   frontend:
     build:
       context: ./frontend
+    restart: unless-stopped
     ports:
-      - ${FRONTEND_PORT}:80
+      - 127.0.0.1:${FRONTEND_PORT}:80
     environment:
       # nginx proxies /api to this address inside the compose network
       BACKEND_HOST: backend
@@ -28,9 +37,11 @@ services:
     depends_on:
       - backend
   db:
-    image: docker.io/library/mariadb:latest
+    image: docker.io/library/mariadb:11.8
+    restart: unless-stopped
+    # Only for local development, the backend reaches the database inside the compose network
     ports:
-      - ${DB_PORT}:3306
+      - 127.0.0.1:${DB_PORT}:3306
     environment:
       MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
       MYSQL_DATABASE: ${DB_DBNAME}
