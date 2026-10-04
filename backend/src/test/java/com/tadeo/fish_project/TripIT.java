@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.LongStream;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -159,6 +160,15 @@ class TripIT {
     void testEditCatchesWithInvalidAmount() {
         expectValidationFail(catchesUrl(firstTripId()), HttpMethod.PUT, new EditCatchesDto(
             List.of(new SimpleCatchDto(someFishId, 0, Optional.empty())), List.of()));
+    }
+
+    @Test
+    void testEditCatchesWithTooManyEntries() {
+        List<SimpleCatchDto> tooMany = LongStream.range(0, 101)
+            .mapToObj(i -> new SimpleCatchDto(someFishId, 1, Optional.empty())).toList();
+        expectValidationFail(catchesUrl(firstTripId()), HttpMethod.PUT, new EditCatchesDto(tooMany, List.of()));
+        expectValidationFail(catchesUrl(firstTripId()), HttpMethod.PUT, new EditCatchesDto(List.of(),
+            LongStream.range(0, 101).boxed().toList()));
     }
 
     @Test

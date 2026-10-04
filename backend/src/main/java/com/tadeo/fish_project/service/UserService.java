@@ -8,7 +8,8 @@ import com.tadeo.fish_project.repository.TripRepository;
 import com.tadeo.fish_project.repository.UserRepository;
 import com.tadeo.fish_project.util.JwtUtil;
 
-import org.springframework.security.core.authority.AuthorityUtils;
+import java.util.Optional;
+
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -30,6 +31,7 @@ public class UserService implements UserDetailsService {
     private static final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
     // Same message for unknown users and wrong passwords, so logins don't reveal which usernames exist
     private static final String invalidLoginMessage = "Invalid username or password";
+    private static final String dummyPasswordHash = passwordEncoder.encode("dummy password of no account");
 
     @Override
     public UserDetails loadUserByUsername(String username) {
@@ -38,19 +40,23 @@ public class UserService implements UserDetailsService {
     }
 
     public User createUser(String username, String password) {
+        return createUser(username, password, User.Role.USER);
+    }
+
+    public User createUser(String username, String password, User.Role role) {
         if (userExists(username)) {
             throw new DuplicateUsernameException(username);
         }
-        User user = new User(username,
-                passwordEncoder.encode(password),
-                AuthorityUtils.createAuthorityList("user"));
+        User user = new User(username, passwordEncoder.encode(password), role);
         return userRepository.save(user);
     }
 
     public String login(String username, String password) {
-        User user = userRepository.findByUsername(username)
-            .orElseThrow(() -> new UserCredentialsException(invalidLoginMessage));
-        if (!passwordEncoder.matches(password, user.getPassword())) {
+        Optional<User> user = userRepository.findByUsername(username);
+        // Unknown users are checked against a dummy hash, so both cases take as long as one bcrypt check
+        // and the response time doesn't reveal which usernames exist
+        String hash = user.map(User::getPassword).orElse(dummyPasswordHash);
+        if (!passwordEncoder.matches(password, hash) || user.isEmpty()) {
             throw new UserCredentialsException(invalidLoginMessage);
         }
         return jwtUtil.generateToken(username);
@@ -64,7 +70,11 @@ public class UserService implements UserDetailsService {
 
     @Transactional
     public void delete(String password) {
-        User user = reauthenticate(password);
+        deleteWithTrips(reauthenticate(password));
+    }
+
+    @Transactional
+    public void deleteWithTrips(User user) {
         // Trips have to be removed through JPA so their catches and catch join table rows cascade,
         // the database level ON DELETE CASCADE of trip.user_id doesn't reach those
         tripRepository.deleteAllByUser(user);

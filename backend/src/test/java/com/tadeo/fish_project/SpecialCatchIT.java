@@ -92,6 +92,8 @@ class SpecialCatchIT {
     @BeforeEach
     void initTrip() {
         testUtils.cleanDatabase();
+        // Only admins may upload images, the other user stays a regular user
+        testUserAuth.createAdmin(TestUserAuth.username);
         someFishId = testFishUtils.initializeTestFish();
         tripId = testUserAuth.exchangeRestWithAuth("/api/trips", HttpMethod.POST,
             new ParameterizedTypeReference<TripReturnDto>() {},
@@ -206,6 +208,39 @@ class SpecialCatchIT {
         assertEquals(HttpStatus.NOT_FOUND, postSpecialCatch(other,
             specialCatchParts(new SpecialCatchDto(someFishId, null, null, null), null)).getStatusCode());
         assertEquals(1, getSpecialCatches().size());
+    }
+
+    @Test
+    void testRegularUserCannotUploadImages() {
+        String other = TestUserAuth.otherUsername;
+        Long otherTripId = testUserAuth.exchangeRestAs(other, "/api/trips", HttpMethod.POST,
+            new ParameterizedTypeReference<TripReturnDto>() {},
+            new TripDto("river", Trip.Environment.RIVER, LocalDateTime.of(2026, 4, 5, 6, 30),
+                null, null, null, Set.of(), null),
+            HttpStatus.CREATED, "Failed to create trip").id();
+        String otherCatchesUrl = "/api/trips/" + otherTripId + "/special-catches";
+
+        ResponseEntity<ApiError> withImage = testUserAuth.postMultipartAs(other, otherCatchesUrl,
+            specialCatchParts(new SpecialCatchDto(someFishId, null, null, null), encodedImage("png")),
+            new ParameterizedTypeReference<ApiError>() {});
+        assertEquals(HttpStatus.FORBIDDEN, withImage.getStatusCode());
+        assertEquals("IMAGE_UPLOAD_FORBIDDEN", withImage.getBody().code());
+
+        ResponseEntity<SpecialCatchWithIdDto> withoutImage = testUserAuth.postMultipartAs(other, otherCatchesUrl,
+            specialCatchParts(new SpecialCatchDto(someFishId, null, null, null), null),
+            new ParameterizedTypeReference<SpecialCatchWithIdDto>() {});
+        assertEquals(HttpStatus.CREATED, withoutImage.getStatusCode(), "Catches without image are allowed");
+    }
+
+    @Test
+    void testSpecialCatchesPerTripAreLimited() {
+        SpecialCatchDto dto = new SpecialCatchDto(someFishId, null, null, null);
+        for (int i = 0; i < 50; i++) {
+            createSpecialCatch(dto, null);
+        }
+        ApiError error = expectRejected(specialCatchParts(dto, null), HttpStatus.CONFLICT);
+        assertEquals("QUOTA_EXCEEDED", error.code());
+        assertEquals(50, getSpecialCatches().size());
     }
 
     @Test

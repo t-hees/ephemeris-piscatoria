@@ -2,7 +2,9 @@ CREATE TABLE `user` (
   `id` bigint NOT NULL AUTO_INCREMENT,
   `username` varchar(255) DEFAULT NULL,
   `password` varchar(255) DEFAULT NULL,
-  `authorities` varbinary(255) DEFAULT NULL,
+  `role` enum('USER','ADMIN') NOT NULL DEFAULT 'USER',
+  -- Accounts of regular users are deleted after a while, see DemoAccountCleanup
+  `created_at` datetime(6) NOT NULL,
   `account_non_expired` bit(1) NOT NULL,
   `account_non_locked` bit(1) NOT NULL,
   `credentials_non_expired` bit(1) NOT NULL,

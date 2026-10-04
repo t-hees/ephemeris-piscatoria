@@ -56,6 +56,21 @@ public class GlobalExceptionHandler {
         return buildError("UNSUPPORTED_IMAGE", ex.getMessage(), request, HttpStatus.UNSUPPORTED_MEDIA_TYPE);
     }
 
+    @ExceptionHandler(ImageUploadForbiddenException.class)
+    public ResponseEntity<ApiError> handleImageUploadForbidden(ImageUploadForbiddenException ex, HttpServletRequest request) {
+        return buildError("IMAGE_UPLOAD_FORBIDDEN", ex.getMessage(), request, HttpStatus.FORBIDDEN);
+    }
+
+    @ExceptionHandler(QuotaExceededException.class)
+    public ResponseEntity<ApiError> handleQuotaExceeded(QuotaExceededException ex, HttpServletRequest request) {
+        return buildError("QUOTA_EXCEEDED", ex.getMessage(), request, HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(CaptchaFailedException.class)
+    public ResponseEntity<ApiError> handleCaptchaFailed(CaptchaFailedException ex, HttpServletRequest request) {
+        return buildError("CAPTCHA_FAILED", ex.getMessage(), request, HttpStatus.BAD_REQUEST);
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiError> handleValidationException(MethodArgumentNotValidException ex, HttpServletRequest request) {
         String message = ex.getBindingResult().getFieldErrors().stream()

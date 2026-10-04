@@ -2,6 +2,7 @@ package com.tadeo.fish_project;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.LocalDateTime;
@@ -24,6 +25,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 
 import com.tadeo.fish_project.dto.AllCatchesDto;
+import com.tadeo.fish_project.dto.CurrentUserDto;
 import com.tadeo.fish_project.dto.EditCatchesDto;
 import com.tadeo.fish_project.dto.PasswordDto;
 import com.tadeo.fish_project.dto.SimpleCatchDto;
@@ -34,9 +36,13 @@ import com.tadeo.fish_project.dto.UserDto;
 import com.tadeo.fish_project.dto.UserInfoDto;
 import com.tadeo.fish_project.dto.UserPasswordDto;
 import com.tadeo.fish_project.entity.Trip;
+import com.tadeo.fish_project.entity.User;
 import com.tadeo.fish_project.exception.ApiError;
 import com.tadeo.fish_project.repository.TripRepository;
 import com.tadeo.fish_project.repository.UserRepository;
+import com.tadeo.fish_project.service.DemoAccountCleanup;
+import com.tadeo.fish_project.service.UserService;
+import com.tadeo.fish_project.util.AdminInitializer;
 import com.tadeo.fish_project.util.JwtUtil;
 import com.tadeo.fish_project.util.TestFishUtils;
 import com.tadeo.fish_project.util.TestUserAuth;
@@ -67,6 +73,12 @@ class UserIT {
 
     @Autowired
     JdbcTemplate jdbcTemplate;
+
+    @Autowired
+    UserService userService;
+
+    @Autowired
+    DemoAccountCleanup demoAccountCleanup;
 
     private static final String currentUserUrl = "/api/users/me";
 
@@ -146,6 +158,10 @@ class UserIT {
             "Missing password should be rejected");
         expectValidationFail("/api/auth/register", new UserDto("name", "short"),
             "Too short password should be rejected");
+        expectValidationFail("/api/auth/register", new UserDto("ab", "longenough"),
+            "Too short username should be rejected");
+        expectValidationFail("/api/auth/register", new UserDto("with space", "longenough"),
+            "Usernames with special characters should be rejected");
         assertEquals(1, userRepository.count());
     }
 
@@ -169,10 +185,58 @@ class UserIT {
 
     @Test
     void testGetCurrentUser() {
-        UserInfoDto user = testUtils.exchangeRest(currentUserUrl, HttpMethod.GET,
-            new ParameterizedTypeReference<UserInfoDto>() {}, null, performLoginAndGetHeaders(userDto),
+        CurrentUserDto user = testUtils.exchangeRest(currentUserUrl, HttpMethod.GET,
+            new ParameterizedTypeReference<CurrentUserDto>() {}, null, performLoginAndGetHeaders(userDto),
             HttpStatus.OK, "Failed to get current user");
         assertEquals(userDto.username(), user.username());
+        assertEquals(User.Role.USER, user.role(), "Registered users must not get more than the user role");
+        LocalDateTime createdAt = userRepository.findByUsername(user.username()).get().getCreatedAt();
+        LocalDateTime expiresAt = demoAccountCleanup.expiresAt(userRepository.findByUsername(user.username()).get());
+        assertEquals(createdAt.plusHours(1), expiresAt, "Demo accounts should expire after an hour");
+    }
+
+    @Test
+    void testAdminNeverExpires() {
+        String admin = "admin";
+        testUserAuth.createAdmin(admin);
+        CurrentUserDto user = testUtils.exchangeRest(currentUserUrl, HttpMethod.GET,
+            new ParameterizedTypeReference<CurrentUserDto>() {}, null, testUserAuth.authHeadersFor(admin),
+            HttpStatus.OK, "Failed to get current admin");
+        assertEquals(User.Role.ADMIN, user.role());
+        assertNull(demoAccountCleanup.expiresAt(userRepository.findByUsername(user.username()).get()));
+    }
+
+    @Test
+    void testExpiredDemoAccountsAreDeleted() {
+        String admin = "admin";
+        testUserAuth.createAdmin(admin);
+        String fresh = "fresh";
+        testUserAuth.authHeadersFor(fresh);
+        testUserAuth.exchangeRestWithAuth("/api/trips", HttpMethod.POST,
+            new ParameterizedTypeReference<TripReturnDto>() {},
+            new TripDto("lake", Trip.Environment.LAKE, LocalDateTime.of(2026, 4, 5, 6, 30),
+                null, null, null, Set.of(), null),
+            HttpStatus.CREATED, "Failed to create trip");
+        jdbcTemplate.update("UPDATE user SET created_at = ? WHERE username IN (?, ?)",
+            LocalDateTime.now().minusHours(2), TestUserAuth.username, admin);
+
+        demoAccountCleanup.deleteExpiredAccounts();
+
+        assertFalse(userRepository.findByUsername(TestUserAuth.username).isPresent(),
+            "Expired demo account should be deleted");
+        assertEquals(0, tripRepository.count(), "Trips of the expired account should be deleted as well");
+        assertTrue(userRepository.findByUsername(fresh).isPresent(), "Fresh accounts should be kept");
+        assertTrue(userRepository.findByUsername(admin).isPresent(), "Admins should never be deleted");
+    }
+
+    @Test
+    void testAdminIsCreatedFromEnvironment() throws Exception {
+        new AdminInitializer(userService, "boss", "bosspassword").run();
+        User admin = userRepository.findByUsername("boss").get();
+        assertTrue(admin.isAdmin());
+        // Runs on every startup, an existing admin is kept as is
+        new AdminInitializer(userService, "boss", "otherpassword").run();
+        performLoginAndGetHeaders(new UserDto("boss", "bosspassword"));
     }
 
     @Test
@@ -255,6 +319,8 @@ class UserIT {
 
     @Test
     void testDeleteUserWithTrips() {
+        // Only admins may upload the image
+        jdbcTemplate.update("UPDATE user SET role = 'ADMIN' WHERE username = ?", TestUserAuth.username);
         Long fishId = testFishUtils.initializeTestFish();
         Long tripId = testUserAuth.exchangeRestWithAuth("/api/trips", HttpMethod.POST,
             new ParameterizedTypeReference<TripReturnDto>() {},

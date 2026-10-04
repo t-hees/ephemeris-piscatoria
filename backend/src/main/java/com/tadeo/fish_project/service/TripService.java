@@ -22,6 +22,8 @@ import com.tadeo.fish_project.entity.Trip;
 import com.tadeo.fish_project.entity.User;
 import com.tadeo.fish_project.exception.FishNotFoundException;
 import com.tadeo.fish_project.exception.ImageNotFoundException;
+import com.tadeo.fish_project.exception.ImageUploadForbiddenException;
+import com.tadeo.fish_project.exception.QuotaExceededException;
 import com.tadeo.fish_project.exception.TripNotFoundException;
 import com.tadeo.fish_project.entity.Image;
 import com.tadeo.fish_project.dto.SpecialCatchDto;
@@ -40,6 +42,9 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class TripService {
+    // Limits for the public demo, so a single account can't fill the database
+    static final int MAX_TRIPS_PER_USER = 500;
+    static final int MAX_SPECIAL_CATCHES_PER_TRIP = 50;
 
     private final TripRepository tripRepository;
     private final SpecialCatchRepository specialCatchRepository;
@@ -49,6 +54,9 @@ public class TripService {
 
     public TripReturnDto createTrip(TripDto tripDto) {
         User user = userService.getUser();
+        if (tripRepository.countByUser(user) >= MAX_TRIPS_PER_USER) {
+            throw new QuotaExceededException("trips", MAX_TRIPS_PER_USER);
+        }
         Trip trip = Trip.builder()
             .location(tripDto.location())
             .simpleCatches(new HashSet<SimpleCatch>())
@@ -98,13 +106,22 @@ public class TripService {
     image may be null for a catch without image
     */
     public SpecialCatchWithIdDto createSpecialCatch(Long tripId, SpecialCatchDto dto, MultipartFile image) {
-        Trip trip = findOwnTrip(tripId);
+        User user = userService.getUser();
+        Trip trip = tripRepository.findByIdAndUser(tripId, user)
+            .orElseThrow(() -> new TripNotFoundException(tripId));
+        boolean hasImage = image != null && !image.isEmpty();
+        if (hasImage && !user.isAdmin()) {
+            throw new ImageUploadForbiddenException();
+        }
+        if (trip.getSpecialCatches().size() >= MAX_SPECIAL_CATCHES_PER_TRIP) {
+            throw new QuotaExceededException("special catches per trip", MAX_SPECIAL_CATCHES_PER_TRIP);
+        }
         Fish fish = fishSerice.findById(dto.fishId())
             .orElseThrow(() -> new FishNotFoundException(dto.fishId()));
 
         SpecialCatch specialCatch = specialCatchRepository.save(SpecialCatch.builder()
             .fish(fish)
-            .image((image != null && !image.isEmpty()) ? imageService.createImage(image) : null)
+            .image(hasImage ? imageService.createImage(image) : null)
             .size(dto.size())
             .weight(dto.weight())
             .notes(dto.notes())

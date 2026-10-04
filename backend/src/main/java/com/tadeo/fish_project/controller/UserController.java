@@ -9,9 +9,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.tadeo.fish_project.dto.CurrentUserDto;
 import com.tadeo.fish_project.dto.PasswordDto;
-import com.tadeo.fish_project.dto.UserInfoDto;
 import com.tadeo.fish_project.dto.UserPasswordDto;
+import com.tadeo.fish_project.entity.User;
 import com.tadeo.fish_project.service.UserService;
 import com.tadeo.fish_project.util.AuthCookies;
 
@@ -29,8 +30,9 @@ public class UserController {
     private final UserService userService;
 
     @GetMapping
-    public ResponseEntity<UserInfoDto> getCurrentUser() {
-        return ResponseEntity.ok(new UserInfoDto(userService.getUser().getUsername()));
+    public ResponseEntity<CurrentUserDto> getCurrentUser() {
+        User user = userService.getUser();
+        return ResponseEntity.ok(new CurrentUserDto(user.getUsername(), user.getRole()));
     }
 
     @PutMapping("/password")

@@ -17,6 +17,8 @@ public interface TripRepository extends CrudRepository<Trip, Long> {
 
     void deleteAllByUser(User user);
 
+    long countByUser(User user);
+
     @Query("SELECT t FROM Trip t WHERE t.user = :user "
         + "AND (:location IS NULL OR LOWER(t.location) LIKE LOWER(CONCAT('%', :location, '%'))) "
         + "AND (:environment IS NULL OR t.environment = :environment) "

@@ -2,6 +2,8 @@ package com.tadeo.fish_project.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -9,15 +11,25 @@ import lombok.*;
 import org.springframework.security.core.CredentialsContainer;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.SpringSecurityCoreVersion;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.util.Assert;
 
-import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.*;
 
 @NoArgsConstructor
 @Entity
 public class User implements UserDetails, CredentialsContainer {
+
+    /*
+    Stored by name, so a role can be granted with plain sql
+    */
+    public enum Role {
+        USER,
+        // May upload images, its account is never deleted automatically
+        ADMIN
+    }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -30,7 +42,13 @@ public class User implements UserDetails, CredentialsContainer {
 
     private String password;
 
-    private Set<GrantedAuthority> authorities;
+    @Enumerated(EnumType.STRING)
+    @Getter
+    private Role role;
+
+    @Getter
+    @Setter
+    private LocalDateTime createdAt;
 
     private boolean accountNonExpired;
 
@@ -40,22 +58,18 @@ public class User implements UserDetails, CredentialsContainer {
 
     private boolean enabled;
 
-    public User(String username, String password, Collection<? extends GrantedAuthority> authorities) {
-        this(username, password, true, true, true, true, authorities);
-    }
-
-    public User(String username, String password, boolean enabled, boolean accountNonExpired,
-                boolean credentialsNonExpired, boolean accountNonLocked,
-                Collection<? extends GrantedAuthority> authorities) {
+    public User(String username, String password, Role role) {
         Assert.isTrue(username != null && !"".equals(username) && password != null,
                 "Cannot pass null or empty values to constructor");
+        Assert.notNull(role, "Cannot pass a null role");
         this.username = username;
         this.password = password;
-        this.enabled = enabled;
-        this.accountNonExpired = accountNonExpired;
-        this.credentialsNonExpired = credentialsNonExpired;
-        this.accountNonLocked = accountNonLocked;
-        this.authorities = Collections.unmodifiableSet(sortAuthorities(authorities));
+        this.role = role;
+        this.createdAt = LocalDateTime.now();
+        this.enabled = true;
+        this.accountNonExpired = true;
+        this.credentialsNonExpired = true;
+        this.accountNonLocked = true;
     }
 
     public Long getId() {
@@ -66,9 +80,14 @@ public class User implements UserDetails, CredentialsContainer {
         this.id = id;
     }
 
+    public boolean isAdmin() {
+        return role == Role.ADMIN;
+    }
+
+    // Spring security expects roles with the ROLE_ prefix, e.g. for hasRole("ADMIN")
     @Override
     public Collection<GrantedAuthority> getAuthorities() {
-        return this.authorities;
+        return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
     }
 
     @Override
@@ -110,21 +129,9 @@ public class User implements UserDetails, CredentialsContainer {
         this.password = null;
     }
 
-    private static SortedSet<GrantedAuthority> sortAuthorities(Collection<? extends GrantedAuthority> authorities) {
-        Assert.notNull(authorities, "Cannot pass a null GrantedAuthority collection");
-        // Ensure array iteration order is predictable (as per
-        // UserDetails.getAuthorities() contract and SEC-717)
-        SortedSet<GrantedAuthority> sortedAuthorities = new TreeSet<>(new User.AuthorityComparator());
-        for (GrantedAuthority grantedAuthority : authorities) {
-            Assert.notNull(grantedAuthority, "GrantedAuthority list cannot contain any null elements");
-            sortedAuthorities.add(grantedAuthority);
-        }
-        return sortedAuthorities;
-    }
-
     @Override
     public boolean equals(Object obj) {
-        if (obj instanceof org.springframework.security.core.userdetails.User user) {
+        if (obj instanceof User user) {
             return this.username.equals(user.getUsername());
         }
         return false;
@@ -141,31 +148,12 @@ public class User implements UserDetails, CredentialsContainer {
         sb.append(getClass().getName()).append(" [");
         sb.append("Username=").append(this.username).append(", ");
         sb.append("Password=[PROTECTED], ");
+        sb.append("Role=").append(this.role).append(", ");
+        sb.append("CreatedAt=").append(this.createdAt).append(", ");
         sb.append("Enabled=").append(this.enabled).append(", ");
         sb.append("AccountNonExpired=").append(this.accountNonExpired).append(", ");
         sb.append("CredentialsNonExpired=").append(this.credentialsNonExpired).append(", ");
-        sb.append("AccountNonLocked=").append(this.accountNonLocked).append(", ");
-        sb.append("Granted Authorities=").append(this.authorities).append("]");
+        sb.append("AccountNonLocked=").append(this.accountNonLocked).append("]");
         return sb.toString();
-    }
-
-    private static class AuthorityComparator implements Comparator<GrantedAuthority>, Serializable {
-
-        private static final long serialVersionUID = SpringSecurityCoreVersion.SERIAL_VERSION_UID;
-
-        @Override
-        public int compare(GrantedAuthority g1, GrantedAuthority g2) {
-            // Neither should ever be null as each entry is checked before adding it to
-            // the set. If the authority is null, it is a custom authority and should
-            // precede others.
-            if (g2.getAuthority() == null) {
-                return -1;
-            }
-            if (g1.getAuthority() == null) {
-                return 1;
-            }
-            return g1.getAuthority().compareTo(g2.getAuthority());
-        }
-
     }
 }

@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.util.MultiValueMap;
 
+import com.tadeo.fish_project.entity.User;
 import com.tadeo.fish_project.exception.ApiError;
 import com.tadeo.fish_project.repository.UserRepository;
 import com.tadeo.fish_project.service.UserService;
@@ -46,6 +47,13 @@ public class TestUserAuth {
         HttpHeaders headers = new HttpHeaders();
         headers.add(HttpHeaders.COOKIE, cookie.toString());
         return headers;
+    }
+
+    /*
+    Admins are the only users that may upload images
+    */
+    public void createAdmin(String name) {
+        userService.createUser(name, password, User.Role.ADMIN);
     }
 
     /*
