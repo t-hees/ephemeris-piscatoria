@@ -22,6 +22,9 @@ export const en: Translations = {
     repeatPassword: "Repeat password:",
     passwordsDontMatch: "Error: Passwords don't match",
     registerSuccess: "Registration successful! Try logging in",
+    demoAccountHint: "This is a demo: accounts and all their data are deleted automatically after one hour.",
+    usernameRules: "3 to 30 letters, digits, '_', '.' or '-'",
+    captchaMissing: "Error: Please complete the captcha first",
   },
   userPage: {
     title: "Change user data",
@@ -69,6 +72,7 @@ export const en: Translations = {
     submit: "Submit",
     saved: "Catches saved",
     imageTooLarge: (megabytes: number) => `The photo is larger than ${megabytes} MB`,
+    photoUploadDisabled: "Uploading photos is disabled in the demo.",
     noTripId: "ERROR: No fishing trip provided",
   },
 };

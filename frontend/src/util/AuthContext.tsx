@@ -4,8 +4,14 @@ export type UserInfo = {
   username: string,
 }
 
+export type CurrentUser = UserInfo & {
+  role: "USER" | "ADMIN",
+}
+
 export type AuthType = {
   name: string|null,
+  // Only admins may upload images
+  isAdmin: boolean,
   isAuthenticated: () => boolean,
   fetchName: () => void,
   setName: (name: string) => void,
@@ -14,6 +20,7 @@ export type AuthType = {
 
 export const AuthContext = createContext<AuthType>({
   name: null,
+  isAdmin: false,
   isAuthenticated: () => false,
   fetchName: () => {},
   setName: () => {},

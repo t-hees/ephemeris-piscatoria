@@ -6,8 +6,14 @@ import EditCatch from './EditCatch';
 import { jsonResponse, mockFetch, requestBodies } from '../test/mockFetch';
 import { MAX_IMAGE_BYTES, type AllCatchesDto, type SimpleFish } from '../components/api/FishCatch';
 import { translations } from '../i18n/LanguageContext';
+import { AuthContext, type AuthType } from '../util/AuthContext';
 
 const t = translations.de;
+
+const defaultAuth: AuthType = {
+  name: null, isAdmin: false, isAuthenticated: () => true,
+  fetchName: () => {}, setName: () => {}, authClear: () => {},
+};
 
 const aalmutter: SimpleFish = { id: 1, scientificName: "Zoarces viviparus", commonName: "Aalmutter" };
 const oldCatches: AllCatchesDto = {
@@ -27,7 +33,7 @@ const savedCatches: AllCatchesDto = {
 const uploadError = { code: "UNSUPPORTED_IMAGE", message: "Only JPEG and PNG images are supported",
   timestamp: "", uri: "" };
 
-function renderEditCatch(createSpecialCatch = () => jsonResponse({}, 201)) {
+function renderEditCatch(createSpecialCatch = () => jsonResponse({}, 201), isAdmin = true) {
   let saved = false;
   const fetchMock = mockFetch({
     "GET trips/5/catches": () => jsonResponse(saved ? savedCatches : oldCatches),
@@ -36,9 +42,11 @@ function renderEditCatch(createSpecialCatch = () => jsonResponse({}, 201)) {
     "GET fish?name=": () => jsonResponse([aalmutter]),
   });
   render(
-    <MemoryRouter initialEntries={["/edit-fish?id=5"]}>
-      <EditCatch />
-    </MemoryRouter>
+    <AuthContext.Provider value={{ ...defaultAuth, name: "john", isAdmin }}>
+      <MemoryRouter initialEntries={["/edit-fish?id=5"]}>
+        <EditCatch />
+      </MemoryRouter>
+    </AuthContext.Provider>
   );
   return fetchMock;
 }
@@ -154,6 +162,14 @@ describe("EditCatch", () => {
     expect(screen.queryByText(t.catches.saved)).not.toBeInTheDocument();
     expect(fileInputs()).toHaveLength(1);
     expect(screen.getByRole("heading", { name: "Aalmutter" })).toBeInTheDocument();
+  });
+
+  it("only lets admins choose images", async () => {
+    renderEditCatch(undefined, false);
+    await addSpecialCatches(["aal"]);
+
+    expect(fileInputs()).toHaveLength(0);
+    expect(screen.getByText(t.catches.photoUploadDisabled)).toBeInTheDocument();
   });
 
   it("rejects too large images before uploading", async () => {

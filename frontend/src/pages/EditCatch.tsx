@@ -7,6 +7,7 @@ import { fetchApi } from "../util/fetchApi";
 import type { SimpleFish, SimpleCatchDto, SpecialCatchDto, SpecialCatchWithIdDto, EditCatchesDto, AllCatchesDto, NewSpecialCatch } from "../components/api/FishCatch";
 import { MAX_IMAGE_BYTES, SpecialCatchList } from "../components/api/FishCatch";
 import { useTranslation } from "../i18n/LanguageContext";
+import { useAuth } from "../util/AuthContext";
 
 export default function EditCatch() {
   return (
@@ -38,6 +39,8 @@ function Catch({ setError, setNotification }: NotifiableContentContext) {
   const [removableSpecialCatchIds, setRemovableSpecialCatchIds] = useState<number[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const { t } = useTranslation();
+  // Uploaded images aren't moderated, so the public demo only lets admins upload them
+  const { isAdmin } = useAuth();
 
   const catchesPath = `trips/${tripId}/catches`;
 
@@ -196,11 +199,14 @@ function Catch({ setError, setNotification }: NotifiableContentContext) {
               {fish.previewUrl &&
                 <img src={fish.previewUrl} alt={t.catches.photoOf(fish.name)}/>
               }
-              <input
-                type="file"
-                accept="image/jpeg,image/png"
-                onChange={(e) => selectImage(index, e.target.files?.[0])}
-              />
+              {isAdmin
+                ? <input
+                    type="file"
+                    accept="image/jpeg,image/png"
+                    onChange={(e) => selectImage(index, e.target.files?.[0])}
+                  />
+                : <p>{t.catches.photoUploadDisabled}</p>
+              }
               <label className="form-label">{t.catches.size}</label>
               <input
                 type="number"

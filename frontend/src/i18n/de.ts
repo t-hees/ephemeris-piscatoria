@@ -20,6 +20,9 @@ export const de = {
     repeatPassword: "Wiederhole Passwort:",
     passwordsDontMatch: "Fehler: Die Passwörter stimmen nicht überein",
     registerSuccess: "Registrierung erfolgreich! Versuche Login",
+    demoAccountHint: "Dies ist eine Demo: Accounts werden nach einer Stunde mit allen Daten automatisch gelöscht.",
+    usernameRules: "3 bis 30 Buchstaben, Ziffern, '_', '.' oder '-'",
+    captchaMissing: "Fehler: Bitte bestätige zuerst das Captcha",
   },
   userPage: {
     title: "Nutzerdaten Ändern",
@@ -67,6 +70,7 @@ export const de = {
     submit: "Absenden",
     saved: "Fänge gespeichert",
     imageTooLarge: (megabytes: number) => `Das Foto ist größer als ${megabytes} MB`,
+    photoUploadDisabled: "Das Hochladen von Fotos ist in der Demo deaktiviert.",
     noTripId: "FEHLER: Kein Angelausflug angegeben",
   },
 };
