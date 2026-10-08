@@ -14,6 +14,8 @@ export default defineConfig({
   use: {
     baseURL: process.env.E2E_BASE_URL ?? 'http://localhost:3040',
     trace: 'retain-on-failure',
+    // The ui language follows the browser, the journeys use the german texts
+    locale: 'de-DE',
   },
   projects: [
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },

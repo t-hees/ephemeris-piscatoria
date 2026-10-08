@@ -40,6 +40,15 @@ export async function registerAndLogin(page: Page): Promise<TestUser> {
   return user;
 }
 
+// Created by the backend on startup from ADMIN_* in docker-compose.e2e.yml, the only user that may upload images
+export const admin: TestUser = { username: 'e2e-admin', password: 'e2e-admin-password' };
+
+export async function loginAsAdmin(page: Page) {
+  await page.goto('/');
+  await login(page, admin);
+  await expect(page.getByRole('button', { name: admin.username })).toBeVisible();
+}
+
 export async function createTrip(page: Page, location: string, time: string, environment = 'LAKE') {
   await page.getByRole('button', { name: 'Neuer Angelausflug' }).click();
   await field(page, 'Tag/Uhrzeit:').fill(time);

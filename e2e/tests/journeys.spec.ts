@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { createTrip, field, login, register, registerAndLogin, selectFish, tripCard, uniqueUser } from './helpers';
+import { createTrip, field, login, loginAsAdmin, register, registerAndLogin, selectFish, tripCard, uniqueUser } from './helpers';
 
 const onePixelPng = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64');
@@ -55,10 +55,12 @@ test('edit the catches of a trip', async ({ page }) => {
   await expect(card.getByText('Größe: 80')).toBeVisible();
 });
 
-test('upload a photo of a catch', async ({ page }) => {
-  await registerAndLogin(page);
-  await createTrip(page, 'Photo Lake', '2026-05-02T08:00');
-  const card = tripCard(page, 'Photo Lake');
+test('upload a photo of a catch as admin', async ({ page }) => {
+  await loginAsAdmin(page);
+  // The admin account outlives a single run, so its trips need unique names
+  const location = `Photo Lake ${Date.now()}`;
+  await createTrip(page, location, '2026-05-02T08:00');
+  const card = tripCard(page, location);
   await card.locator('.trip-card-header').click();
   await card.getByRole('button', { name: 'Fischliste bearbeiten' }).click();
 
@@ -73,6 +75,18 @@ test('upload a photo of a catch', async ({ page }) => {
   const photo = card.getByAltText('Foto Conger conger');
   await expect(photo).toBeVisible();
   await expect.poll(() => photo.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBe(1);
+});
+
+test('regular users cannot upload photos', async ({ page }) => {
+  await registerAndLogin(page);
+  await createTrip(page, 'No Photo Lake', '2026-05-03T08:00');
+  const card = tripCard(page, 'No Photo Lake');
+  await card.locator('.trip-card-header').click();
+  await card.getByRole('button', { name: 'Fischliste bearbeiten' }).click();
+
+  await selectFish(page, 1, 'Meeraal', 'Meeraal (Conger conger)');
+  await expect(page.getByText('Das Hochladen von Fotos ist in der Demo deaktiviert.')).toBeVisible();
+  await expect(page.locator('input[type=file]')).toHaveCount(0);
 });
 
 test('search filters the trip list', async ({ page }) => {

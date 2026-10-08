@@ -13,6 +13,9 @@ services:
       DB_PASSWORD: e2epass
       BACKEND_PORT: 8080
       JWT_SECRET: pTj+DBXRkyetocsvSTE1n4r95Gq8rCnCeKvl2qDNBDc=
+      # The only user that may upload images, see e2e/tests/helpers.ts
+      ADMIN_USERNAME: e2e-admin
+      ADMIN_PASSWORD: e2e-admin-password
     depends_on:
       e2e-db:
         condition: service_healthy
@@ -21,10 +24,15 @@ services:
       context: ./frontend
     # Differs from the default FRONTEND_PORT so it can run next to the regular stack
     ports:
-      - 3040:80
+      - 127.0.0.1:3040:80
     environment:
       BACKEND_HOST: e2e-backend
       BACKEND_PORT: 8080
+      # All test requests come from one address, the production limits would reject most of them
+      RATE_LIMIT_REGISTER: 600r/m
+      RATE_LIMIT_REGISTER_BURST: 100
+      RATE_LIMIT_LOGIN: 600r/m
+      RATE_LIMIT_LOGIN_BURST: 100
     depends_on:
       - e2e-backend
   e2e-db:

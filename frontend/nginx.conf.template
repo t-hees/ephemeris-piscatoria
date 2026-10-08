@@ -1,18 +1,73 @@
-# Rendered by the nginx image on container start, ${BACKEND_HOST} and ${BACKEND_PORT} come from the environment
+# Rendered by the nginx image on container start, ${BACKEND_HOST}, ${BACKEND_PORT} and the ${RATE_LIMIT_*}
+# variables come from the environment (defaults for the rate limits in the Dockerfile)
+
+# Requests come through the host nginx (see deploy/README.org) or the docker port forwarding, both from
+# private addresses. They pass the client address in X-Forwarded-For, which the rate limits are keyed on.
+# Only safe because docker-compose.yml publishes the port on 127.0.0.1 only.
+set_real_ip_from 127.0.0.1;
+set_real_ip_from 10.0.0.0/8;
+set_real_ip_from 172.16.0.0/12;
+set_real_ip_from 192.168.0.0/16;
+real_ip_header X-Forwarded-For;
+real_ip_recursive on;
+
+# Per client address. nginx rates are per second or minute, the burst allows a few requests at once.
+limit_req_zone $binary_remote_addr zone=register:10m rate=${RATE_LIMIT_REGISTER};
+limit_req_zone $binary_remote_addr zone=login:10m rate=${RATE_LIMIT_LOGIN};
+limit_req_zone $binary_remote_addr zone=api:10m rate=${RATE_LIMIT_API};
+limit_conn_zone $binary_remote_addr zone=connections:10m;
+limit_req_status 429;
+limit_conn_status 429;
+
 server {
     listen 80;
     root /usr/share/nginx/html;
     index index.html;
+    server_tokens off;
+
+    limit_conn connections 20;
+    # Only uploads of special catches need more, see below
+    client_max_body_size 64k;
+
+    # Applies to every response without own add_header, so locations below must not add headers
+    add_header Content-Security-Policy "default-src 'self'; script-src 'self' https://challenges.cloudflare.com; frame-src https://challenges.cloudflare.com; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header Referrer-Policy "same-origin" always;
+    add_header Permissions-Policy "camera=(), microphone=(), geolocation=()" always;
 
     # The browser only talks to this server, so frontend and api share one origin and no CORS is needed
-    location /api/ {
+    # Keep the host the browser used, so the backend doesn't see same-origin requests as cross-origin
+    proxy_set_header Host $http_host;
+    # $remote_addr is already the client address resolved above, any addresses it sent itself are dropped
+    proxy_set_header X-Forwarded-For $remote_addr;
+    proxy_set_header X-Forwarded-Proto $scheme;
+
+    error_page 429 @too_many_requests;
+    location @too_many_requests {
+        default_type application/json;
+        return 429 '{"code":"TOO_MANY_REQUESTS","message":"Too many requests, please try again later","timestamp":"","uri":"$request_uri"}';
+    }
+
+    location = /api/auth/register {
+        limit_req zone=register burst=${RATE_LIMIT_REGISTER_BURST} nodelay;
         proxy_pass http://${BACKEND_HOST}:${BACKEND_PORT};
-        # Keep the host the browser used, so the backend doesn't see same-origin requests as cross-origin
-        proxy_set_header Host $http_host;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location = /api/auth/login {
+        limit_req zone=login burst=${RATE_LIMIT_LOGIN_BURST} nodelay;
+        proxy_pass http://${BACKEND_HOST}:${BACKEND_PORT};
+    }
+
+    location ~ ^/api/trips/[0-9]+/special-catches$ {
+        limit_req zone=api burst=${RATE_LIMIT_API_BURST} nodelay;
         # A 10MB image plus multipart overhead, the backend enforces the actual limits
         client_max_body_size 12m;
+        proxy_pass http://${BACKEND_HOST}:${BACKEND_PORT};
+    }
+
+    location /api/ {
+        limit_req zone=api burst=${RATE_LIMIT_API_BURST} nodelay;
+        proxy_pass http://${BACKEND_HOST}:${BACKEND_PORT};
     }
 
     # Client side routes (e.g. /create-trip) are handled by the react router
