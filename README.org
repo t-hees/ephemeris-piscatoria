@@ -22,7 +22,12 @@ DB_ROOT_PASSWORD=rootpass
 BACKEND_PORT=8080
 FRONTEND_PORT=3030
 JWT_SECRET=pTj+DBXRkyetocsvSTE1n4r95Gq8rCnCeKvl2qDNBDc=
+# Optional: the only account that may upload images, created on startup
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD=adminpassword
 #+end_src
+These values are for local development only, the =JWT_SECRET= above is public.
+Accounts of regular users are deleted after an hour, set =DEMO_USER_TTL=0= to keep them.
 
 The browser only talks to the frontend container: its nginx serves the app and proxies all =/api/= requests
 to the backend inside the compose network. Frontend and api therefore share one origin, so no CORS setup is needed

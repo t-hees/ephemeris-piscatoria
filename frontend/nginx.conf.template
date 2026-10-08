@@ -1,7 +1,7 @@
 # Rendered by the nginx image on container start, ${BACKEND_HOST}, ${BACKEND_PORT} and the ${RATE_LIMIT_*}
 # variables come from the environment (defaults for the rate limits in the Dockerfile)
 
-# Requests come through the host nginx (see deploy/README.org) or the docker port forwarding, both from
+# Requests come through the host nginx or the docker port forwarding, both from
 # private addresses. They pass the client address in X-Forwarded-For, which the rate limits are keyed on.
 # Only safe because docker-compose.yml publishes the port on 127.0.0.1 only.
 set_real_ip_from 127.0.0.1;
