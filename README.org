@@ -8,9 +8,11 @@ Currently only a german interface and german fish are supported.
 - Creation of simple counted fish-catches or detailed catches with images and additional data
 
 * Running
+The =Makefile= in root has targets for running, testing and cleaning up, =make= lists all of them.
+
 ** Docker quickstart
 To quickly start the project create .env file in root with the following content, change all placeholder values if desired
-(especially =JWT_SECRET= should be a random valid secret jwt key) and run =docker-compose up=.
+(especially =JWT_SECRET= should be a random valid secret jwt key) and run =make up=.
 Afterwards connect to the frontend on a browser (=http://localhost:3030/= in this example)
 #+begin_src sh
 DB_HOST=localhost
@@ -33,11 +35,20 @@ The browser only talks to the frontend container: its nginx serves the app and p
 to the backend inside the compose network. Frontend and api therefore share one origin, so no CORS setup is needed
 and the app works under any host name the frontend is reached by.
 
+| Target          | Description                                   |
+|-----------------+-----------------------------------------------|
+| =make up=       | Build and start the stack in the background   |
+| =make down=     | Stop the stack, keeps the database volume     |
+| =make restart=  | Rebuild and restart the stack                 |
+| =make logs=     | Follow the logs of the stack                  |
+| =make ps=       | Show the containers of the stack              |
+| =make reset-db= | Stop the stack and delete the database volume |
+
 ** Manual without docker
 *** Database
 Create a mariadb database with a user and password and pass those as environment in the following section.
 Alternatively docker-compose can be used just for the database by creating a .env file with all DB_* variables
-from the previous section and running =docker-compose up db= in root.
+from the previous section and running =make db=.
 
 *** Backend
 **** Environment
@@ -53,10 +64,11 @@ BACKEND_PORT=8080
 JWT_SECRET=pTj+DBXRkyetocsvSTE1n4r95Gq8rCnCeKvl2qDNBDc=
 #+end_src
 **** Running
-Run the following in the backend root folder after configuring the environment
+Run the following after configuring the environment, it also loads the variables from the .env file in root
 #+begin_src sh
-mvn spring-boot:run
+make backend-run
 #+end_src
+=make backend-build= builds the jar into =backend/target= without running the tests.
 
 *** Frontend
 **** Environment
@@ -66,39 +78,45 @@ by default at =localhost:8080=. Set the following only if the backend runs elsew
 BACKEND_HOST=localhost
 BACKEND_PORT=8080
 #+end_src
-When serving a build (=npm run build=) with another web server, it has to proxy =/api/= to the backend
+When serving a build (=make frontend-build=) with another web server, it has to proxy =/api/= to the backend
 like =frontend/nginx.conf.template= does.
 **** Running
-Run the following in the frontend root folder
 #+begin_src sh
-npm run dev
+make install
+make frontend-run
 #+end_src
 
 * Testing
-All test suites also run in GitHub Actions, see =.github/workflows/=.
+All test suites also run in GitHub Actions with the same make targets, see =.github/workflows/=.
+=make test= runs the backend and frontend tests, =make test-all= additionally the end to end tests.
 ** Backend
 Unit tests (=*Test.java=) don't need a database
 #+begin_src sh
-cd backend && mvn test
+make backend-unit-test
 #+end_src
 Integration tests (=*IT.java=) need a mariadb and are run together with the unit tests in docker
 #+begin_src sh
-docker compose -f docker-compose.test.yml up --build --abort-on-container-exit --exit-code-from test-backend
+make backend-test
 #+end_src
 ** Frontend
-Unit and component tests with vitest (requires node >= 22)
+Linting, typechecking and unit and component tests with vitest (requires node >= 22).
+They can also be run on their own with =make frontend-lint=, =make frontend-typecheck= and =make frontend-unit-test=
 #+begin_src sh
-cd frontend && npm test
+make frontend-test
 #+end_src
 ** End to end
 Playwright journeys against the whole application. The stack runs at =http://localhost:3040/=, so it doesn't
-collide with the regular one, and the tests wait until the backend is up
+collide with the regular one, and the tests wait until the backend is up.
+The target starts the stack, runs the tests and stops it again
 #+begin_src sh
-docker compose -f docker-compose.e2e.yml up -d --build
-cd e2e && npm install && npx playwright install chromium
-npm test
-docker compose -f docker-compose.e2e.yml down
+make e2e-test
 #+end_src
+** Cleanup
+| Target              | Description                                   |
+|---------------------+-----------------------------------------------|
+| =make clean=        | Remove build output and test reports          |
+| =make docker-clean= | Remove leftover test and e2e containers       |
+| =make clean-all=    | Run clean and docker-clean                    |
 
 
 * Credit

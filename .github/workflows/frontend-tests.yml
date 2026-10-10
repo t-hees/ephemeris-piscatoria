@@ -9,9 +9,6 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: frontend
 
     steps:
       - name: Checkout code
@@ -25,13 +22,14 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
 
       - name: Install dependencies
+        working-directory: frontend
         run: npm ci
 
       - name: Lint
-        run: npm run lint
+        run: make frontend-lint
 
       - name: Typecheck
-        run: npx tsc -b
+        run: make frontend-typecheck
 
       - name: Run unit tests
-        run: npm test -- --run
+        run: make frontend-unit-test

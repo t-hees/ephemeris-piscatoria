@@ -9,17 +9,10 @@ on:
 jobs:
   e2e:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: e2e
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Start application stack
-        working-directory: .
-        run: docker compose -f docker-compose.e2e.yml up -d --build
 
       - name: Setup node
         uses: actions/setup-node@v4
@@ -28,23 +21,9 @@ jobs:
           cache: npm
           cache-dependency-path: e2e/package-lock.json
 
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Install browser
-        run: npx playwright install --with-deps chromium
-
-      - name: Typecheck
-        run: npm run typecheck
-
-      # Waits for the backend itself (see global-setup.ts) before running the journeys
+      # Starts and stops the application stack and prints its logs on failure
       - name: Run e2e tests
-        run: npm test
-
-      - name: Show application logs
-        if: failure()
-        working-directory: .
-        run: docker compose -f docker-compose.e2e.yml logs
+        run: make e2e-test PLAYWRIGHT_INSTALL_FLAGS=--with-deps
 
       - name: Upload report
         if: failure()
@@ -55,8 +34,3 @@ jobs:
             e2e/playwright-report
             e2e/test-results
           retention-days: 7
-
-      - name: Stop application stack
-        if: always()
-        working-directory: .
-        run: docker compose -f docker-compose.e2e.yml down
