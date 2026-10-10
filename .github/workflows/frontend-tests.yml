@@ -33,3 +33,14 @@ jobs:
 
       - name: Run unit tests
         run: make frontend-unit-test
+
+      - name: Publish test report
+        if: ${{ !cancelled() }}
+        uses: mikepenz/action-junit-report@v6
+        with:
+          check_name: Frontend test report
+          report_paths: frontend/reports/junit.xml
+          annotate_only: true
+          detailed_summary: true
+          include_passed: true
+          include_time_in_summary: true

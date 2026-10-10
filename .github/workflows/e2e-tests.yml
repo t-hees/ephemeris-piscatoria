@@ -25,6 +25,17 @@ jobs:
       - name: Run e2e tests
         run: make e2e-test PLAYWRIGHT_INSTALL_FLAGS=--with-deps
 
+      - name: Publish test report
+        if: ${{ !cancelled() }}
+        uses: mikepenz/action-junit-report@v6
+        with:
+          check_name: E2E test report
+          report_paths: e2e/reports/junit.xml
+          annotate_only: true
+          detailed_summary: true
+          include_passed: true
+          include_time_in_summary: true
+
       - name: Upload report
         if: failure()
         uses: actions/upload-artifact@v4

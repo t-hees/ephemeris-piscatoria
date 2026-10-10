@@ -59,8 +59,14 @@ backend-unit-test: ## Run the backend unit tests without a database
 
 .PHONY: backend-test
 backend-test: ## Run backend unit and integration tests in docker
-	$(COMPOSE_TEST) up --build --abort-on-container-exit --exit-code-from test-backend; \
-		status=$$?; $(COMPOSE_TEST) down -v; exit $$status
+	$(COMPOSE_TEST) build --quiet
+	$(COMPOSE_TEST) up --attach test-backend --abort-on-container-exit --exit-code-from test-backend; \
+		status=$$?; \
+		rm -rf backend/target/surefire-reports backend/target/failsafe-reports; \
+		mkdir -p backend/target; \
+		$(COMPOSE_TEST) cp test-backend:/app/target/surefire-reports backend/target/; \
+		$(COMPOSE_TEST) cp test-backend:/app/target/failsafe-reports backend/target/; \
+		$(COMPOSE_TEST) down -v; exit $$status
 
 .PHONY: frontend-lint
 frontend-lint: ## Lint the frontend
@@ -111,7 +117,7 @@ ps: ## Show the containers of the stack
 
 .PHONY: clean
 clean: ## Remove build output and test reports
-	rm -rf backend/target frontend/dist e2e/playwright-report e2e/test-results
+	rm -rf backend/target frontend/dist frontend/reports e2e/playwright-report e2e/test-results e2e/reports
 
 .PHONY: docker-clean
 docker-clean: ## Remove leftover test and e2e containers
