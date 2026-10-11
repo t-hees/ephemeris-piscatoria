@@ -6,6 +6,7 @@ import { Loading } from "../components/Loading";
 import { fetchApi } from "../util/fetchApi";
 import type { SimpleFish, SimpleCatchDto, SpecialCatchDto, SpecialCatchWithIdDto, EditCatchesDto, AllCatchesDto, NewSpecialCatch } from "../components/api/FishCatch";
 import { MAX_IMAGE_BYTES, SpecialCatchList } from "../components/api/FishCatch";
+import { fishLabel } from "../util/fishLabel";
 import { useTranslation } from "../i18n/LanguageContext";
 import { useAuth } from "../util/AuthContext";
 
@@ -24,6 +25,7 @@ function toFormData(newCatch: NewSpecialCatch): FormData {
     size: newCatch.size,
     weight: newCatch.weight,
     notes: newCatch.notes,
+    name: newCatch.name,
   };
   const form = new FormData();
   form.append("catch", new Blob([JSON.stringify(specialCatch)], { type: "application/json" }));
@@ -143,14 +145,15 @@ function Catch({ setError, setNotification }: NotifiableContentContext) {
         <ItemAutocomplete<SimpleFish>
           url="fish?name="
           onSelect={(fish: SimpleFish) => (!simpleCatches.some(scatch => scatch.fishId === fish.id))
-            && setSimpleCatches([...simpleCatches, {name: fish.commonName, fishId: fish.id, amount: 1}])}
+            && setSimpleCatches([...simpleCatches, {
+              name: fish.commonName, scientificName: fish.scientificName, fishId: fish.id, amount: 1}])}
           displayFunc={(fish: SimpleFish) => `${fish.commonName} (${fish.scientificName})`}
           setError={setError}
         />
         <ul className="entry-list">
           {simpleCatches.map((fish) => (
             <li className="entry-list-item quantity-row" key={fish.fishId}>
-              <span>{fish.name}</span>
+              <span>{fishLabel(fish.name, fish.scientificName)}</span>
               <button onClick={() => {
                 if (fish.amount < 2) {
                   setSimpleCatches(simpleCatches.filter(sCatch => sCatch.fishId != fish.fishId))
@@ -180,6 +183,7 @@ function Catch({ setError, setNotification }: NotifiableContentContext) {
           url="fish?name="
           onSelect={(fish: SimpleFish) => setSpecialCatches([...specialCatches, {
               name: fish.commonName,
+              scientificName: fish.scientificName,
               fishId: fish.id,
               image: null,
               previewUrl: null,
@@ -194,10 +198,10 @@ function Catch({ setError, setNotification }: NotifiableContentContext) {
           {specialCatches.map((fish, index) => (
             // New catches are only ever appended, so their position is a stable key
             <li className="entry-list-item" key={index}>
-              <h3>{fish.name}</h3>
+              <h3>{fishLabel(fish.name, fish.scientificName)}</h3>
               <label className="form-label">{t.catches.photo}</label>
               {fish.previewUrl &&
-                <img src={fish.previewUrl} alt={t.catches.photoOf(fish.name)}/>
+                <img src={fish.previewUrl} alt={t.catches.photoOf(fishLabel(fish.name, fish.scientificName))}/>
               }
               {isAdmin
                 ? <input

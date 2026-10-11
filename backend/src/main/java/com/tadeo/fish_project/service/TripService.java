@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -37,6 +38,7 @@ import com.tadeo.fish_project.dto.SpecialCatchWithIdDto;
 import com.tadeo.fish_project.repository.SpecialCatchRepository;
 import com.tadeo.fish_project.repository.TripRepository;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -80,13 +82,16 @@ public class TripService {
         tripRepository.delete(trip);
     }
 
+    @Transactional
     public void editCatches(Long tripId, EditCatchesDto editCatchesDto) {
-        Trip trip = tripRepository.findByIdAndUser(tripId, userService.getUser())
+        User user = userService.getUser();
+        Trip trip = tripRepository.findByIdAndUser(tripId, user)
             .orElseThrow(() -> new TripNotFoundException(tripId));
 
         Set<SimpleCatch> simpleCatches = editCatchesDto.simpleCatches().stream().map((dto) -> {
             Fish fish = fishSerice.findById(dto.fishId())
                 .orElseThrow(() -> new FishNotFoundException(dto.fishId()));
+            dto.name().ifPresent(name -> rememberName(user, fish, name));
             return SimpleCatch.builder()
                 .fish(fish)
                 .amount(dto.amount())
@@ -105,6 +110,7 @@ public class TripService {
     /*
     image may be null for a catch without image
     */
+    @Transactional
     public SpecialCatchWithIdDto createSpecialCatch(Long tripId, SpecialCatchDto dto, MultipartFile image) {
         User user = userService.getUser();
         Trip trip = tripRepository.findByIdAndUser(tripId, user)
@@ -118,6 +124,7 @@ public class TripService {
         }
         Fish fish = fishSerice.findById(dto.fishId())
             .orElseThrow(() -> new FishNotFoundException(dto.fishId()));
+        if (dto.name() != null) rememberName(user, fish, dto.name());
 
         SpecialCatch specialCatch = specialCatchRepository.save(SpecialCatch.builder()
             .fish(fish)
@@ -128,7 +135,7 @@ public class TripService {
             .build());
         trip.getSpecialCatches().add(specialCatch);
         tripRepository.save(trip);
-        return toSpecialCatchDto(tripId, specialCatch);
+        return toSpecialCatchDto(tripId, specialCatch, user.getFishNames());
     }
 
     /*
@@ -142,20 +149,23 @@ public class TripService {
             .orElseThrow(() -> new ImageNotFoundException(catchId));
     }
 
+    @Transactional
     public AllCatchesDto getAllCatches(Long tripId) {
         Trip trip = findOwnTrip(tripId);
+        Map<Long, String> fishNames = trip.getUser().getFishNames();
 
         List<SimpleCatchDto> simpleCatches = trip.getSimpleCatches().stream()
             .map(simpleCatch -> new SimpleCatchDto(
                 simpleCatch.getFish().getId(),
                 simpleCatch.getAmount(),
+                Optional.ofNullable(fishNames.get(simpleCatch.getFish().getId())),
                 Optional.of(simpleCatch.getFish().getScientificName())
             ))
             .collect(Collectors.toList());
 
         List<SpecialCatchWithIdDto> specialCatches = trip.getSpecialCatches().stream()
             .sorted(Comparator.comparing(SpecialCatch::getId))
-            .map(specialCatch -> toSpecialCatchDto(tripId, specialCatch))
+            .map(specialCatch -> toSpecialCatchDto(tripId, specialCatch, fishNames))
             .collect(Collectors.toList());
 
         return new AllCatchesDto(simpleCatches, specialCatches);
@@ -181,7 +191,17 @@ public class TripService {
             .orElseThrow(() -> new TripNotFoundException(tripId));
     }
 
-    private static SpecialCatchWithIdDto toSpecialCatchDto(Long tripId, SpecialCatch specialCatch) {
+    /*
+    Only names of the fish are accepted, the map is saved with the user at the end of the transaction
+    */
+    private static void rememberName(User user, Fish fish, String name) {
+        if (fish.getCommonNames().contains(name)) {
+            user.getFishNames().put(fish.getId(), name);
+        }
+    }
+
+    private static SpecialCatchWithIdDto toSpecialCatchDto(Long tripId, SpecialCatch specialCatch,
+        Map<Long, String> fishNames) {
         // Checks the id only, so the lazy image itself isn't loaded
         boolean hasImage = specialCatch.getImage() != null;
         return new SpecialCatchWithIdDto(
@@ -191,6 +211,7 @@ public class TripService {
             specialCatch.getSize(),
             specialCatch.getWeight(),
             specialCatch.getNotes(),
+            fishNames.get(specialCatch.getFish().getId()),
             specialCatch.getFish().getScientificName()
         );
     }

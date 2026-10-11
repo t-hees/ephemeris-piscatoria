@@ -1,5 +1,6 @@
 import type { JSX } from "react";
 import { useTranslation } from "../../i18n/LanguageContext";
+import { fishLabel } from "../../util/fishLabel";
 
 export type SimpleFish = {
   id: number,
@@ -7,10 +8,12 @@ export type SimpleFish = {
   commonName: string;
 };
 
+// name is the picked common name, the backend remembers it per user and fish
 export type SimpleCatchDto = {
   fishId: number,
   amount: number,
   name: string|null,
+  scientificName: string|null,
 }
 
 // Sent as the "catch" part when creating a special catch, its image is a separate part
@@ -19,11 +22,12 @@ export type SpecialCatchDto = {
   size: number|null,
   weight: number|null,
   notes: string|null,
+  name: string|null,
 }
 
 // A special catch that isn't saved yet
 export type NewSpecialCatch = SpecialCatchDto & {
-  name: string,
+  scientificName: string,
   image: File|null,
   // Object URL of image for showing it before the upload
   previewUrl: string|null,
@@ -37,6 +41,7 @@ export type SpecialCatchWithIdDto = {
   weight: number|null,
   notes: string|null,
   name: string|null,
+  scientificName: string,
 }
 
 export type EditCatchesDto = {
@@ -62,10 +67,11 @@ export function SpecialCatchList({ specialCatches, action }: SpecialCatchListTyp
     <div className="entry-list">
       {specialCatches.map((fish) => {
         return <div className="entry-list-item" key={fish.catchId}>
-                 <h3>{fish.name}</h3>
+                 <h3>{fishLabel(fish.name, fish.scientificName)}</h3>
                  {fish.imageUrl &&
                    <a href={fish.imageUrl} target="_blank" rel="noreferrer">
-                     <img src={fish.imageUrl} alt={t.catches.photoOf(fish.name)} loading="lazy"/>
+                     <img src={fish.imageUrl} alt={t.catches.photoOf(fishLabel(fish.name, fish.scientificName))}
+                       loading="lazy"/>
                    </a>
                  }
                  <p>{t.catches.size}: {fish.size}</p>
@@ -84,7 +90,7 @@ export function SimpleCatchList({ simpleCatches }: {simpleCatches: SimpleCatchDt
       <tbody>
         {simpleCatches.map((fish) => {
           return <tr key={fish.fishId}>
-                   <td>{fish.name}</td>
+                   <td>{fishLabel(fish.name, fish.scientificName)}</td>
                    <td>{fish.amount}</td>
                  </tr>
         })}

@@ -35,6 +35,16 @@ CREATE TABLE `fish_environment` (
   CONSTRAINT `fk_fish_environment_fish` FOREIGN KEY (`fish_id`) REFERENCES `fish` (`id`)
 ) ENGINE=InnoDB;
 
+-- The common name a user last picked for a fish, shown for all their catches of it
+CREATE TABLE `user_fish_names` (
+  `user_id` bigint NOT NULL,
+  `fish_id` bigint NOT NULL,
+  `common_name` varchar(255) NOT NULL,
+  PRIMARY KEY (`user_id`, `fish_id`),
+  CONSTRAINT `fk_user_fish_names_user` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`),
+  CONSTRAINT `fk_user_fish_names_fish` FOREIGN KEY (`fish_id`) REFERENCES `fish` (`id`)
+) ENGINE=InnoDB;
+
 CREATE TABLE `image` (
   `id` bigint NOT NULL AUTO_INCREMENT,
   `mime_type` varchar(255) NOT NULL,

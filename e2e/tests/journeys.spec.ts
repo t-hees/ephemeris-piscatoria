@@ -49,9 +49,9 @@ test('edit the catches of a trip', async ({ page }) => {
   await page.getByRole('button', { name: 'HOME' }).click();
   await card.locator('.trip-card-header').click();
   const simpleCatch = card.locator('.simple-catch-table tr');
-  await expect(simpleCatch.locator('td').nth(0)).toHaveText('Zoarces viviparus');
+  await expect(simpleCatch.locator('td').nth(0)).toHaveText('Aalmutter (Zoarces viviparus)');
   await expect(simpleCatch.locator('td').nth(1)).toHaveText('2');
-  await expect(card.locator('.entry-list-item h3')).toHaveText('Conger conger');
+  await expect(card.locator('.entry-list-item h3')).toHaveText('Meeraal (Conger conger)');
   await expect(card.getByText('Größe: 80')).toBeVisible();
 });
 
@@ -72,7 +72,7 @@ test('upload a photo of a catch as admin', async ({ page }) => {
   // Loaded from the api with the auth cookie, a failed request would leave the image without size
   await page.getByRole('button', { name: 'HOME' }).click();
   await card.locator('.trip-card-header').click();
-  const photo = card.getByAltText('Foto Conger conger');
+  const photo = card.getByAltText('Foto Meeraal (Conger conger)');
   await expect(photo).toBeVisible();
   await expect.poll(() => photo.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBe(1);
 });

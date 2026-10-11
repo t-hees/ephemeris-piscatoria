@@ -16,17 +16,19 @@ const defaultAuth: AuthType = {
 };
 
 const aalmutter: SimpleFish = { id: 1, scientificName: "Zoarces viviparus", commonName: "Aalmutter" };
+// Search results and catches are both shown with this label
+const aalmutterLabel = "Aalmutter (Zoarces viviparus)";
 const oldCatches: AllCatchesDto = {
   simpleCatches: [],
   specialCatches: [
     { catchId: 7, fishId: 2, imageUrl: "/api/trips/5/special-catches/7/image", size: 10, weight: 20,
-      notes: "old notes", name: "Conger conger" },
+      notes: "old notes", name: "Meeraal", scientificName: "Conger conger" },
   ],
 };
 
 // What the backend answers once the edits are saved
 const savedCatches: AllCatchesDto = {
-  simpleCatches: [{ fishId: 1, amount: 2, name: "Zoarces viviparus" }],
+  simpleCatches: [{ fishId: 1, amount: 2, name: null, scientificName: "Zoarces viviparus" }],
   specialCatches: [],
 };
 
@@ -54,7 +56,7 @@ function renderEditCatch(createSpecialCatch = () => jsonResponse({}, 201), isAdm
 async function addSimpleCatch(query = "aal") {
   const [simpleSearch] = await screen.findAllByPlaceholderText(t.common.searchPlaceholder);
   await userEvent.type(simpleSearch, query);
-  await userEvent.click(await screen.findByText("Aalmutter (Zoarces viviparus)"));
+  await userEvent.click(await screen.findByText(aalmutterLabel, { selector: ".item-search-list-item" }));
 }
 
 // Queries differ, as repeating the same one within the debounce delay doesn't search again
@@ -62,12 +64,12 @@ async function addSpecialCatches(queries: string[]) {
   for (const query of queries) {
     const specialSearch = (await screen.findAllByPlaceholderText(t.common.searchPlaceholder))[1];
     await userEvent.type(specialSearch, query);
-    await userEvent.click(await screen.findByText("Aalmutter (Zoarces viviparus)"));
+    await userEvent.click(await screen.findByText(aalmutterLabel, { selector: ".item-search-list-item" }));
   }
 }
 
 function simpleCatchRow(): HTMLElement {
-  return screen.getByText("Aalmutter").closest("li")!;
+  return document.querySelector<HTMLElement>(".quantity-row")!;
 }
 
 function fileInputs(): HTMLInputElement[] {
@@ -88,8 +90,8 @@ describe("EditCatch", () => {
   it("loads the existing catches of the trip", async () => {
     const fetchMock = renderEditCatch();
 
-    expect(await screen.findByText("Conger conger")).toBeInTheDocument();
-    expect(screen.getByAltText(t.catches.photoOf("Conger conger"))).toHaveAttribute("src", oldCatches.specialCatches[0].imageUrl);
+    expect(await screen.findByText("Meeraal (Conger conger)")).toBeInTheDocument();
+    expect(screen.getByAltText(t.catches.photoOf("Meeraal (Conger conger)"))).toHaveAttribute("src", oldCatches.specialCatches[0].imageUrl);
     expect(requestBodies(fetchMock, "trips/5/catches", "GET")).toHaveLength(1);
   });
 
@@ -98,8 +100,9 @@ describe("EditCatch", () => {
     await addSimpleCatch();
     await addSimpleCatch("mutter");
 
-    expect(screen.getAllByText("Aalmutter")).toHaveLength(1);
+    expect(document.querySelectorAll(".quantity-row")).toHaveLength(1);
     const row = simpleCatchRow();
+    expect(within(row).getByText(aalmutterLabel)).toBeInTheDocument();
     expect(within(row).getByText("1")).toBeInTheDocument();
 
     await userEvent.click(within(row).getByText("+"));
@@ -107,7 +110,7 @@ describe("EditCatch", () => {
 
     await userEvent.click(within(row).getByText("-"));
     await userEvent.click(within(row).getByText("-"));
-    expect(screen.queryByText("Aalmutter")).not.toBeInTheDocument();
+    expect(screen.queryByText(aalmutterLabel)).not.toBeInTheDocument();
   });
 
   it("submits added and removed catches", async () => {
@@ -115,16 +118,16 @@ describe("EditCatch", () => {
     await addSimpleCatch();
     await userEvent.click(within(simpleCatchRow()).getByText("+"));
     await userEvent.click(screen.getByText(t.catches.deleteFish));
-    expect(screen.queryByText("Conger conger")).not.toBeInTheDocument();
+    expect(screen.queryByText("Meeraal (Conger conger)")).not.toBeInTheDocument();
 
     await userEvent.click(screen.getByText(t.catches.submit));
 
     expect(await screen.findByText(t.catches.saved)).toBeInTheDocument();
     expect(requestBodies(fetchMock, "trips/5/catches", "PUT")).toEqual([{
-      simpleCatches: [{ name: "Aalmutter", fishId: 1, amount: 2 }],
+      simpleCatches: [{ name: "Aalmutter", scientificName: "Zoarces viviparus", fishId: 1, amount: 2 }],
       removableSpecialCatchIds: [7],
     }]);
-    // Shows the saved catches afterwards
+    // Shows the saved catches afterwards, only by scientific name if no common name was remembered
     expect(screen.getByText("Zoarces viviparus")).toBeInTheDocument();
     expect(requestBodies(fetchMock, "trips/5/catches", "GET")).toHaveLength(2);
   });
@@ -138,15 +141,15 @@ describe("EditCatch", () => {
     await userEvent.type(secondSize, "45");
     const photo = new File(["png data"], "photo.png", { type: "image/png" });
     await userEvent.upload(fileInputs()[0], photo);
-    expect(screen.getByAltText(t.catches.photoOf("Aalmutter"))).toHaveAttribute("src", "blob:preview");
+    expect(screen.getByAltText(t.catches.photoOf(aalmutterLabel))).toHaveAttribute("src", "blob:preview");
 
     await userEvent.click(screen.getByText(t.catches.submit));
 
     expect(await screen.findByText(t.catches.saved)).toBeInTheDocument();
     const [first, second] = requestBodies(fetchMock, "trips/5/special-catches", "POST") as FormData[];
-    expect(await catchPart(first)).toEqual({ fishId: 1, size: 30, weight: null, notes: null });
+    expect(await catchPart(first)).toEqual({ fishId: 1, size: 30, weight: null, notes: null, name: "Aalmutter" });
     expect(first.get("image")).toBe(photo);
-    expect(await catchPart(second)).toEqual({ fishId: 1, size: 45, weight: null, notes: null });
+    expect(await catchPart(second)).toEqual({ fishId: 1, size: 45, weight: null, notes: null, name: "Aalmutter" });
     expect(second.get("image")).toBeNull();
     // Saved new catches aren't shown as unsaved anymore
     expect(fileInputs()).toHaveLength(0);
@@ -161,7 +164,7 @@ describe("EditCatch", () => {
     expect(await screen.findByText(`UNSUPPORTED_IMAGE: ${uploadError.message}`)).toBeInTheDocument();
     expect(screen.queryByText(t.catches.saved)).not.toBeInTheDocument();
     expect(fileInputs()).toHaveLength(1);
-    expect(screen.getByRole("heading", { name: "Aalmutter" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: aalmutterLabel })).toBeInTheDocument();
   });
 
   it("only lets admins choose images", async () => {
@@ -180,6 +183,6 @@ describe("EditCatch", () => {
     await userEvent.upload(fileInputs()[0], tooLarge);
 
     expect(screen.getByText(t.catches.imageTooLarge(10))).toBeInTheDocument();
-    expect(screen.queryByAltText(t.catches.photoOf("Aalmutter"))).not.toBeInTheDocument();
+    expect(screen.queryByAltText(t.catches.photoOf(aalmutterLabel))).not.toBeInTheDocument();
   });
 });

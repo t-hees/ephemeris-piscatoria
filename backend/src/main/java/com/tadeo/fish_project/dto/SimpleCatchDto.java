@@ -5,4 +5,8 @@ import java.util.Optional;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 
-public record SimpleCatchDto(@NotNull Long fishId, @NotNull @Positive Integer amount, Optional<String> name){};
+/*
+name is the picked common name, scientificName is only returned
+*/
+public record SimpleCatchDto(@NotNull Long fishId, @NotNull @Positive Integer amount, Optional<String> name,
+    Optional<String> scientificName){};

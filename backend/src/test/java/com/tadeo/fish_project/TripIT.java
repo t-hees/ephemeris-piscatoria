@@ -92,6 +92,10 @@ class TripIT {
         return trips.getFirst().id();
     }
 
+    private static SimpleCatchDto simpleCatch(Long fishId, int amount, String name) {
+        return new SimpleCatchDto(fishId, amount, Optional.ofNullable(name), Optional.empty());
+    }
+
     private AllCatchesDto editCatches(Long tripId, EditCatchesDto dto) {
         return testUserAuth.exchangeRestWithAuth(catchesUrl(tripId), HttpMethod.PUT,
             new ParameterizedTypeReference<AllCatchesDto>() {}, dto, HttpStatus.OK, "Failed editing catches of trip");
@@ -159,13 +163,13 @@ class TripIT {
     @Test
     void testEditCatchesWithInvalidAmount() {
         expectValidationFail(catchesUrl(firstTripId()), HttpMethod.PUT, new EditCatchesDto(
-            List.of(new SimpleCatchDto(someFishId, 0, Optional.empty())), List.of()));
+            List.of(simpleCatch(someFishId, 0, null)), List.of()));
     }
 
     @Test
     void testEditCatchesWithTooManyEntries() {
         List<SimpleCatchDto> tooMany = LongStream.range(0, 101)
-            .mapToObj(i -> new SimpleCatchDto(someFishId, 1, Optional.empty())).toList();
+            .mapToObj(i -> simpleCatch(someFishId, 1, null)).toList();
         expectValidationFail(catchesUrl(firstTripId()), HttpMethod.PUT, new EditCatchesDto(tooMany, List.of()));
         expectValidationFail(catchesUrl(firstTripId()), HttpMethod.PUT, new EditCatchesDto(List.of(),
             LongStream.range(0, 101).boxed().toList()));
@@ -220,7 +224,7 @@ class TripIT {
 
         expectEntityNotFound(other, catchesUrl(tripId), HttpMethod.GET, null);
         expectEntityNotFound(other, catchesUrl(tripId), HttpMethod.PUT,
-            new EditCatchesDto(List.of(new SimpleCatchDto(someFishId, 1, Optional.empty())), List.of()));
+            new EditCatchesDto(List.of(simpleCatch(someFishId, 1, null)), List.of()));
         expectEntityNotFound(other, "/api/trips/" + tripId, HttpMethod.DELETE, null);
 
         assertEquals(List.of(tripId), getAllTrips().stream().map(TripReturnDto::id).toList(),
@@ -301,14 +305,15 @@ class TripIT {
 
         // Add catches
         AllCatchesDto editedCatches = editCatches(tripId, new EditCatchesDto(
-            List.of(new SimpleCatchDto(someFishId, 4, Optional.of("ignored by backend"))),
+            List.of(simpleCatch(someFishId, 4, TestFishUtils.someFishCommonName)),
             List.of()));
 
-        // Get catches, names are resolved to the scientific name by the backend
+        // Get catches, the picked common name is returned along with the scientific name
         AllCatchesDto allCatches = getCatches(tripId);
         assertEquals(allCatches, editedCatches, "Editing should return the resulting catches");
         assertEquals(
-            List.of(new SimpleCatchDto(someFishId, 4, Optional.of(TestFishUtils.someFishScientificName))),
+            List.of(new SimpleCatchDto(someFishId, 4, Optional.of(TestFishUtils.someFishCommonName),
+                Optional.of(TestFishUtils.someFishScientificName))),
             allCatches.simpleCatches()
         );
 
@@ -318,13 +323,50 @@ class TripIT {
     }
 
     @Test
+    void testEditCatchesIgnoresUnknownName() {
+        Long tripId = firstTripId();
+        editCatches(tripId, new EditCatchesDto(List.of(simpleCatch(someFishId, 1, "not a name of it")), List.of()));
+        assertEquals(Optional.empty(), getCatches(tripId).simpleCatches().getFirst().name());
+    }
+
+    @Test
+    void testPickedNameAppliesToEarlierCatches() {
+        Long congerId = testFishUtils.fishId(TestFishUtils.congerScientificName);
+        Long firstTrip = firstTripId();
+        Long secondTrip = createTrip(tripAt("second", LocalDateTime.of(2026, 5, 1, 0, 0))).id();
+
+        editCatches(firstTrip, new EditCatchesDto(List.of(simpleCatch(congerId, 1, "Meeraal")), List.of()));
+        editCatches(secondTrip, new EditCatchesDto(List.of(simpleCatch(congerId, 1, "Conger")), List.of()));
+
+        assertEquals(Optional.of("Conger"), getCatches(firstTrip).simpleCatches().getFirst().name());
+    }
+
+    @Test
+    void testPickedNamesArePerUser() {
+        Long congerId = testFishUtils.fishId(TestFishUtils.congerScientificName);
+        Long tripId = firstTripId();
+        editCatches(tripId, new EditCatchesDto(List.of(simpleCatch(congerId, 1, "Meeraal")), List.of()));
+
+        String other = TestUserAuth.otherUsername;
+        Long otherTripId = testUserAuth.exchangeRestAs(other, "/api/trips", HttpMethod.POST,
+            new ParameterizedTypeReference<TripReturnDto>() {}, tripDto, HttpStatus.CREATED,
+            "Failed to create trip").id();
+        testUserAuth.exchangeRestAs(other, catchesUrl(otherTripId), HttpMethod.PUT,
+            new ParameterizedTypeReference<AllCatchesDto>() {},
+            new EditCatchesDto(List.of(simpleCatch(congerId, 1, "Conger")), List.of()),
+            HttpStatus.OK, "Failed editing catches of trip");
+
+        assertEquals(Optional.of("Meeraal"), getCatches(tripId).simpleCatches().getFirst().name());
+    }
+
+    @Test
     void testEditCatchesReplacesSimpleCatches() {
         Long tripId = firstTripId();
 
         editCatches(tripId, new EditCatchesDto(
-            List.of(new SimpleCatchDto(someFishId, 4, Optional.empty())), List.of()));
+            List.of(simpleCatch(someFishId, 4, null)), List.of()));
         editCatches(tripId, new EditCatchesDto(
-            List.of(new SimpleCatchDto(someFishId, 2, Optional.empty())), List.of()));
+            List.of(simpleCatch(someFishId, 2, null)), List.of()));
 
         List<SimpleCatchDto> simpleCatches = getCatches(tripId).simpleCatches();
         assertEquals(1, simpleCatches.size(), "Simple catches should be replaced, not appended");
@@ -335,7 +377,7 @@ class TripIT {
     void testEditCatchesWithUnknownFish() {
         Long tripId = firstTripId();
         expectEntityNotFound(TestUserAuth.username, catchesUrl(tripId), HttpMethod.PUT,
-            new EditCatchesDto(List.of(new SimpleCatchDto(-1l, 1, Optional.empty())), List.of()));
+            new EditCatchesDto(List.of(simpleCatch(-1l, 1, null)), List.of()));
         assertTrue(getCatches(tripId).simpleCatches().isEmpty());
     }
 

@@ -329,11 +329,12 @@ class UserIT {
             HttpStatus.CREATED, "Failed to create trip").id();
         testUserAuth.exchangeRestWithAuth("/api/trips/" + tripId + "/catches", HttpMethod.PUT,
             new ParameterizedTypeReference<AllCatchesDto>() {},
-            new EditCatchesDto(List.of(new SimpleCatchDto(fishId, 1, Optional.empty())), List.of()),
+            new EditCatchesDto(List.of(new SimpleCatchDto(fishId, 1, Optional.of(TestFishUtils.someFishCommonName),
+                Optional.empty())), List.of()),
             HttpStatus.OK, "Failed to add catches");
         ResponseEntity<String> specialCatch = testUserAuth.postMultipartAs(TestUserAuth.username,
             "/api/trips/" + tripId + "/special-catches",
-            TestUtils.specialCatchParts(new SpecialCatchDto(fishId, 1l, 1l, null), TestUtils.encodedImage("png")),
+            TestUtils.specialCatchParts(new SpecialCatchDto(fishId, 1l, 1l, null, null), TestUtils.encodedImage("png")),
             new ParameterizedTypeReference<String>() {});
         assertEquals(HttpStatus.CREATED, specialCatch.getStatusCode(), specialCatch.getBody());
 
@@ -342,5 +343,7 @@ class UserIT {
         assertEquals(0, tripRepository.count(), "Trips of deleted user should be deleted as well");
         assertEquals(0, jdbcTemplate.queryForObject("SELECT COUNT(*) FROM image", Long.class),
             "Images of deleted user should be deleted as well");
+        assertEquals(0, jdbcTemplate.queryForObject("SELECT COUNT(*) FROM user_fish_names", Long.class),
+            "Picked fish names of deleted user should be deleted as well");
     }
 }

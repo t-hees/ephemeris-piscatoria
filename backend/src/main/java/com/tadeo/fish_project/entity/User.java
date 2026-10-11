@@ -1,12 +1,16 @@
 package com.tadeo.fish_project.entity;
 
+import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.MapKeyColumn;
 import lombok.*;
 import org.springframework.security.core.CredentialsContainer;
 import org.springframework.security.core.GrantedAuthority;
@@ -57,6 +61,14 @@ public class User implements UserDetails, CredentialsContainer {
     private boolean credentialsNonExpired;
 
     private boolean enabled;
+
+    // Keyed by fish id, the common name last picked for that fish
+    @ElementCollection
+    @CollectionTable(name = "user_fish_names", joinColumns = @JoinColumn(name = "user_id"))
+    @MapKeyColumn(name = "fish_id")
+    @Column(name = "common_name")
+    @Getter
+    private Map<Long, String> fishNames = new HashMap<>();
 
     public User(String username, String password, Role role) {
         Assert.isTrue(username != null && !"".equals(username) && password != null,

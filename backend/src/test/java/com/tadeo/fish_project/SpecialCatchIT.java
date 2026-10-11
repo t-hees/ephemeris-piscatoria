@@ -106,14 +106,15 @@ class SpecialCatchIT {
     void testCreateSpecialCatchWithImage() {
         byte[] png = encodedImage("png");
         ResponseEntity<SpecialCatchWithIdDto> response = postSpecialCatch(TestUserAuth.username,
-            specialCatchParts(new SpecialCatchDto(someFishId, 24l, 30l, "some notes"), png));
+            specialCatchParts(new SpecialCatchDto(someFishId, 24l, 30l, "some notes",
+                TestFishUtils.someFishCommonName), png));
 
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
         SpecialCatchWithIdDto created = response.getBody();
         String catchUrl = specialCatchesUrl() + "/" + created.catchId();
         assertEquals(URI.create(catchUrl), response.getHeaders().getLocation());
         assertEquals(new SpecialCatchWithIdDto(created.catchId(), someFishId, catchUrl + "/image", 24l, 30l,
-            "some notes", TestFishUtils.someFishScientificName), created);
+            "some notes", TestFishUtils.someFishCommonName, TestFishUtils.someFishScientificName), created);
         assertEquals(List.of(created), getSpecialCatches(), "Catches should contain the created catch");
 
         ResponseEntity<byte[]> image = getImage(TestUserAuth.username, created.imageUrl());
@@ -127,7 +128,7 @@ class SpecialCatchIT {
     @Test
     void testImageTypeIsDetectedFromData() {
         // Sent as application/octet-stream without extension, the type comes from the data only
-        SpecialCatchWithIdDto created = createSpecialCatch(new SpecialCatchDto(someFishId, null, null, null),
+        SpecialCatchWithIdDto created = createSpecialCatch(new SpecialCatchDto(someFishId, null, null, null, null),
             encodedImage("jpeg"));
         assertEquals(MediaType.IMAGE_JPEG, getImage(TestUserAuth.username, created.imageUrl())
             .getHeaders().getContentType());
@@ -135,7 +136,7 @@ class SpecialCatchIT {
 
     @Test
     void testCreateSpecialCatchesWithoutImage() {
-        SpecialCatchDto withoutImage = new SpecialCatchDto(someFishId, null, null, null);
+        SpecialCatchDto withoutImage = new SpecialCatchDto(someFishId, null, null, null, null);
         createSpecialCatch(withoutImage, null);
         createSpecialCatch(withoutImage, null);
 
@@ -151,7 +152,7 @@ class SpecialCatchIT {
 
     @Test
     void testRemoveSpecialCatch() {
-        SpecialCatchWithIdDto created = createSpecialCatch(new SpecialCatchDto(someFishId, null, null, null),
+        SpecialCatchWithIdDto created = createSpecialCatch(new SpecialCatchDto(someFishId, null, null, null, null),
             encodedImage("png"));
 
         testUserAuth.exchangeRestWithAuth("/api/trips/" + tripId + "/catches", HttpMethod.PUT,
@@ -165,7 +166,7 @@ class SpecialCatchIT {
     @Test
     void testRejectsUnsupportedImages() {
         for (byte[] data : List.of("<svg onload=\"alert(1)\"></svg>".getBytes(), encodedImage("gif"))) {
-            ApiError error = expectRejected(specialCatchParts(new SpecialCatchDto(someFishId, null, null, null), data),
+            ApiError error = expectRejected(specialCatchParts(new SpecialCatchDto(someFishId, null, null, null, null), data),
                 HttpStatus.UNSUPPORTED_MEDIA_TYPE);
             assertEquals("UNSUPPORTED_IMAGE", error.code());
         }
@@ -175,7 +176,7 @@ class SpecialCatchIT {
     @Test
     void testRejectsTooLargeImages() {
         byte[] tooLarge = new byte[10 * 1024 * 1024 + 1];
-        ApiError error = expectRejected(specialCatchParts(new SpecialCatchDto(someFishId, null, null, null), tooLarge),
+        ApiError error = expectRejected(specialCatchParts(new SpecialCatchDto(someFishId, null, null, null, null), tooLarge),
             HttpStatus.PAYLOAD_TOO_LARGE);
         assertEquals("PAYLOAD_TOO_LARGE", error.code());
         assertTrue(getSpecialCatches().isEmpty(), "Rejected catches must not be saved");
@@ -183,16 +184,16 @@ class SpecialCatchIT {
 
     @Test
     void testRejectsInvalidCatches() {
-        ApiError invalid = expectRejected(specialCatchParts(new SpecialCatchDto(someFishId, -1l, null, null), null),
+        ApiError invalid = expectRejected(specialCatchParts(new SpecialCatchDto(someFishId, -1l, null, null, null), null),
             HttpStatus.BAD_REQUEST);
         assertEquals("VALIDATION_FAILED", invalid.code());
 
-        ApiError unknownFish = expectRejected(specialCatchParts(new SpecialCatchDto(-1l, null, null, null), null),
+        ApiError unknownFish = expectRejected(specialCatchParts(new SpecialCatchDto(-1l, null, null, null, null), null),
             HttpStatus.NOT_FOUND);
         assertEquals("ENTITY_NOT_FOUND", unknownFish.code());
 
         MultiValueMap<String, Object> withoutCatch = new LinkedMultiValueMap<>();
-        withoutCatch.add("image", specialCatchParts(new SpecialCatchDto(someFishId, null, null, null),
+        withoutCatch.add("image", specialCatchParts(new SpecialCatchDto(someFishId, null, null, null, null),
             encodedImage("png")).getFirst("image"));
         expectRejected(withoutCatch, HttpStatus.BAD_REQUEST);
         assertTrue(getSpecialCatches().isEmpty(), "Rejected catches must not be saved");
@@ -200,13 +201,13 @@ class SpecialCatchIT {
 
     @Test
     void testOtherUserCannotAccessSpecialCatches() {
-        SpecialCatchWithIdDto created = createSpecialCatch(new SpecialCatchDto(someFishId, null, null, null),
+        SpecialCatchWithIdDto created = createSpecialCatch(new SpecialCatchDto(someFishId, null, null, null, null),
             encodedImage("png"));
         String other = TestUserAuth.otherUsername;
 
         assertEquals(HttpStatus.NOT_FOUND, getImage(other, created.imageUrl()).getStatusCode());
         assertEquals(HttpStatus.NOT_FOUND, postSpecialCatch(other,
-            specialCatchParts(new SpecialCatchDto(someFishId, null, null, null), null)).getStatusCode());
+            specialCatchParts(new SpecialCatchDto(someFishId, null, null, null, null), null)).getStatusCode());
         assertEquals(1, getSpecialCatches().size());
     }
 
@@ -221,20 +222,20 @@ class SpecialCatchIT {
         String otherCatchesUrl = "/api/trips/" + otherTripId + "/special-catches";
 
         ResponseEntity<ApiError> withImage = testUserAuth.postMultipartAs(other, otherCatchesUrl,
-            specialCatchParts(new SpecialCatchDto(someFishId, null, null, null), encodedImage("png")),
+            specialCatchParts(new SpecialCatchDto(someFishId, null, null, null, null), encodedImage("png")),
             new ParameterizedTypeReference<ApiError>() {});
         assertEquals(HttpStatus.FORBIDDEN, withImage.getStatusCode());
         assertEquals("IMAGE_UPLOAD_FORBIDDEN", withImage.getBody().code());
 
         ResponseEntity<SpecialCatchWithIdDto> withoutImage = testUserAuth.postMultipartAs(other, otherCatchesUrl,
-            specialCatchParts(new SpecialCatchDto(someFishId, null, null, null), null),
+            specialCatchParts(new SpecialCatchDto(someFishId, null, null, null, null), null),
             new ParameterizedTypeReference<SpecialCatchWithIdDto>() {});
         assertEquals(HttpStatus.CREATED, withoutImage.getStatusCode(), "Catches without image are allowed");
     }
 
     @Test
     void testSpecialCatchesPerTripAreLimited() {
-        SpecialCatchDto dto = new SpecialCatchDto(someFishId, null, null, null);
+        SpecialCatchDto dto = new SpecialCatchDto(someFishId, null, null, null, null);
         for (int i = 0; i < 50; i++) {
             createSpecialCatch(dto, null);
         }
@@ -245,7 +246,7 @@ class SpecialCatchIT {
 
     @Test
     void testImagesRequireAuth() {
-        SpecialCatchWithIdDto created = createSpecialCatch(new SpecialCatchDto(someFishId, null, null, null),
+        SpecialCatchWithIdDto created = createSpecialCatch(new SpecialCatchDto(someFishId, null, null, null, null),
             encodedImage("png"));
         assertEquals(HttpStatus.UNAUTHORIZED, testUtils.exchange(created.imageUrl(), HttpMethod.GET,
             new ParameterizedTypeReference<byte[]>() {}, null, new HttpHeaders()).getStatusCode());

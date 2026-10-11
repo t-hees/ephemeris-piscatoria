@@ -18,6 +18,9 @@ import com.tadeo.fish_project.service.FishService;
 public class TestFishUtils {
 
     public static final String someFishScientificName = "Zoarces viviparus";
+    public static final String someFishCommonName = "Aalmutter";
+    // A test fish with several common names
+    public static final String congerScientificName = "Conger conger";
 
     @Autowired
     FishRepository fishRepository;
@@ -39,6 +42,10 @@ public class TestFishUtils {
         ThrowingSupplier<BufferedReader> readerSupplier = () ->
             new BufferedReader(new StringReader(fishData));
         assertDoesNotThrow(() -> fishService.initializeFromReader(readerSupplier));
-        return fishRepository.findByScientificName(someFishScientificName).get().getId();
+        return fishId(someFishScientificName);
+    }
+
+    public Long fishId(String scientificName) {
+        return fishRepository.findByScientificName(scientificName).get().getId();
     }
 }
