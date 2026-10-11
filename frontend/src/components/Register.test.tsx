@@ -53,4 +53,25 @@ describe("Register", () => {
     expect(setError).toHaveBeenCalledWith(t.loginPage.captchaMissing);
     expect(requestBodies(fetchMock, "auth/register", "POST")).toHaveLength(0);
   });
+
+  it("sends the captcha token", async () => {
+    // Behaves like the widget with Cloudflare's always passing test site key
+    const turnstileRender = vi.fn((_container: HTMLElement, options: { callback: (token: string) => void }) => {
+      options.callback("XXXX.DUMMY.TOKEN.XXXX");
+      return "widget";
+    });
+    window.turnstile = { render: turnstileRender, reset: vi.fn(), remove: vi.fn() };
+    const { fetchMock, setNotification } = renderRegister("1x00000000000000000000AA");
+    await vi.waitFor(() => expect(turnstileRender).toHaveBeenCalled());
+    await fillForm();
+
+    await userEvent.click(screen.getByText(t.common.send));
+
+    await vi.waitFor(() => expect(setNotification).toHaveBeenCalledWith(t.loginPage.registerSuccess));
+    expect(turnstileRender.mock.calls[0][1]).toMatchObject({ sitekey: "1x00000000000000000000AA" });
+    expect(requestBodies(fetchMock, "auth/register", "POST")).toEqual([
+      { username: "john", password: "strongpass", captchaToken: "XXXX.DUMMY.TOKEN.XXXX" },
+    ]);
+    delete window.turnstile;
+  });
 });

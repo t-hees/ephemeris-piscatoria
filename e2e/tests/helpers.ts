@@ -22,6 +22,8 @@ export async function register(page: Page, user: TestUser) {
   await field(page, 'Benutzername:').fill(user.username);
   await field(page, 'Passwort:').fill(user.password);
   await field(page, 'Wiederhole Passwort:').fill(user.password);
+  // The test site key solves the captcha on its own, the form needs the token before sending
+  await expect(page.locator('input[name="cf-turnstile-response"]')).toHaveValue(/.+/);
   await page.getByRole('button', { name: 'Senden' }).click();
   await expect(page.getByText('Registrierung erfolgreich! Versuche Login')).toBeVisible();
 }

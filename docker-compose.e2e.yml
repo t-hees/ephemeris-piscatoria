@@ -16,6 +16,9 @@ services:
       # The only user that may upload images, see e2e/tests/helpers.ts
       ADMIN_USERNAME: e2e-admin
       ADMIN_PASSWORD: e2e-admin-password
+      # Cloudflare's always passing test keys, see e2e/tests/helpers.ts
+      TURNSTILE_SITE_KEY: 1x00000000000000000000AA
+      TURNSTILE_SECRET: 1x0000000000000000000000000000000AA
     depends_on:
       e2e-db:
         condition: service_healthy
