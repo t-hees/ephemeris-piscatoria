@@ -145,12 +145,24 @@ function TripContainer ({ setError, setNotification, searchParams }: NotifiableC
             <div className={`trip-card-body ${isExpanded ? "expanded" : ""}`}>
               <div className="trip-card-body-inner">
                 <div className="trip-details">
-                  <div className="trip-detail"><span className="label">{t.trip.time}</span><span>{trip.time.toString().split("T")[1]}</span></div>
-                  <div className="trip-detail"><span className="label">{t.trip.environment}</span><span>{trip.environment}</span></div>
-                  <div className="trip-detail"><span className="label">{t.trip.duration}</span><span>{trip.hours ? t.trip.hours(trip.hours) : "-"}</span></div>
-                  <div className="trip-detail"><span className="label">{t.trip.temperature}</span><span>{trip.temperature}</span></div>
-                  <div className="trip-detail"><span className="label">{t.trip.waterLevel}</span><span>{trip.waterLevel}</span></div>
-                  <div className="trip-detail"><span className="label">{t.trip.weather}</span><span>{trip.weather && trip.weather.length > 0 ? trip.weather.join(", ") : "-"}</span></div>
+                  <div className="trip-detail"><span className="label">{t.trip.time}</span>
+                    <span>{trip.time.toString().split("T")[1]}</span>
+                  </div>
+                  <div className="trip-detail"><span className="label">{t.trip.environment}</span>
+                    <span>{t.trip.environmentElement[trip.environment]}</span>
+                  </div>
+                  <div className="trip-detail"><span className="label">{t.trip.duration}</span>
+                    <span>{trip.hours ? t.trip.hours(trip.hours) : "-"}</span>
+                  </div>
+                  <div className="trip-detail"><span className="label">{t.trip.temperature}</span>
+                    <span>{trip.temperature}</span>
+                  </div>
+                  <div className="trip-detail"><span className="label">{t.trip.waterLevel}</span>
+                    <span>{trip.waterLevel}</span>
+                  </div>
+                  <div className="trip-detail"><span className="label">{t.trip.weather}</span>
+                    <span>{trip.weather && trip.weather.length > 0 ? trip.weather.map(el => t.trip.weatherElement[el]).join(", ") : "-"}</span>
+                  </div>
                 </div>
                 {trip.notes && (
                   <div className="trip-notes">
@@ -236,7 +248,7 @@ function TripSearchBar({ onSearch }: { onSearch: (searchParams: TripSearchParams
       >
         <option value="">{t.trip.allEnvironments}</option>
         {environmentList.map((environment) => (
-          <option key={environment} value={environment}>{environment}</option>
+          <option key={environment} value={environment}>{t.trip.environmentElement[environment]}</option>
         ))}
       </select>
       <label className="form-label">{t.trip.from}</label>

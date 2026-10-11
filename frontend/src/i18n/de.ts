@@ -1,3 +1,5 @@
+import type { environmentType, weatherType } from "../components/api/Trip";
+
 export const de = {
   common: {
     loading: "Laden ...",
@@ -41,12 +43,35 @@ export const de = {
     time: "Uhrzeit",
     location: "Ort",
     environment: "Gewässerart",
+    environmentElement: {
+      RIVER: "Fluss",
+      LAKE: "See",
+      OCEAN: "Ozean"
+    } satisfies Record<environmentType, string>,
     durationInHours: "Dauer(in h)",
     duration: "Dauer",
     hours: (hours: number) => `${hours} Stunden`,
     temperature: "Temperatur",
     waterLevel: "Wasserpegel",
     weather: "Wetter",
+    weatherElement: {
+      CLEAR_SKY: "Klarer Himmel",
+      PARTLY_CLOUDY: "Teilweise bewölkt",
+      CLOUDY: "Wolkig",
+      OVERCAST: "Bedeckt",
+      FOGGY: "Neblig",
+      HUMID: "Schwül",
+      THUNDERSTORM: "Gewitter",
+      LIGHT_RAIN: "Leichter Regen",
+      HEAVY_RAIN: "Starker Regen",
+      LIGHT_WIND: "Leichter Wind",
+      STRONG_WIND: "Starker Wind",
+      STORM: "Sturm",
+      FREEZING: "Frost",
+      SNOW: "Schnee",
+      DUSK: "Abenddämmerung",
+      DAWN: "Morgendämmerung"
+    } satisfies Record<weatherType, string>,
     notes: "Notizen",
     editCatches: "Fischliste bearbeiten",
     deleteTrip: "Eintrag löschen",

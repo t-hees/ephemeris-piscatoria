@@ -16,15 +16,18 @@ export const weatherList = [
         "SNOW",
         "DUSK",
         "DAWN",
-];
+] as const;
+
+export type environmentType = typeof environmentList[number];
+export type weatherType = typeof weatherList[number];
 
 export type TripDto = {
   location: string,
-  environment: typeof environmentList[number],
+  environment: environmentType,
   time: number,
   hours: number,
   temperature: number,
   waterLevel: number,
-  weather: string[],
+  weather: weatherType[],
   notes: string,
 }

@@ -3,7 +3,7 @@ import { NotifiableContainer, type NotifiableContentContext } from "../component
 import { fetchApi } from "../util/fetchApi";
 import { useNavigate } from "react-router-dom";
 import { Loading } from "../components/Loading";
-import { environmentList, weatherList, type TripDto } from "../components/api/Trip";
+import { environmentList, weatherList, type environmentType, type TripDto, type weatherType } from "../components/api/Trip";
 import { useTranslation } from "../i18n/LanguageContext";
 
 export default function CreateTrip() {
@@ -28,9 +28,7 @@ function Trip({ setError }: NotifiableContentContext) {
   }
 
   const tripFromInput = (labelText: string, dtoElement: keyof TripDto,
-    labelType: "text"|"number"|"datetime-local", isRequired?: boolean) => {
-
-    return(
+    labelType: "text"|"number"|"datetime-local", isRequired?: boolean) => (
       <>
         <label className="form-label">{labelText}: </label>
         <input
@@ -41,46 +39,44 @@ function Trip({ setError }: NotifiableContentContext) {
         />
       </>
     )
-  }
 
-  const tripFormSelection = (labelText: string, dtoElement: keyof TripDto,
-    selectionList: readonly string[] | readonly number[], isMultiSelection?: boolean) => {
 
-    const singleSelection = (
-      <select
-        value={trip[dtoElement]}
-        onChange={(e) => setTripDto({...trip, [dtoElement]: e.target.value})}
-      >
-        <option value="">----</option>
-        {selectionList.map((element, idx) => (
-          <option key={idx} value={element}>
-            {element}
-          </option>
-        ))}
-      </select>
-    )
-
-    const multiSelection = (
-      <select
-        value={trip[dtoElement]}
-        multiple
-        onChange={(e) => setTripDto({...trip, [dtoElement]: Array.from(e.target.selectedOptions, (option) => option.value)})}
-      >
-        <option value="">----</option>
-        {selectionList.map((element, idx) => (
-          <option key={idx} value={element}>
-            {element}
-          </option>
-        ))}
-      </select>
-    )
-    return(
+  const tripEnvironmentSelection = (labelText: string, dtoElement: keyof TripDto,
+    environmentList: readonly environmentType[]) => (
       <>
         <label className="form-label">{labelText}: </label>
-        {isMultiSelection ? multiSelection : singleSelection}
+        <select
+          value={trip[dtoElement]}
+          onChange={(e) => setTripDto({...trip, [dtoElement]: e.target.value})}
+        >
+          <option value="">----</option>
+          {environmentList.map((element, idx) => (
+            <option key={idx} value={element}>
+              {t.trip.environmentElement[element]}
+            </option>
+          ))}
+        </select>
       </>
     )
-  }
+
+  const tripWeatherSelection = (labelText: string, dtoElement: keyof TripDto,
+    weatherList: readonly weatherType[]) => (
+      <>
+        <label className="form-label">{labelText}: </label>
+        <select
+          value={trip[dtoElement]}
+          multiple
+          onChange={(e) => setTripDto({...trip, [dtoElement]: Array.from(e.target.selectedOptions, (option) => option.value)})}
+        >
+          <option value="">----</option>
+          {weatherList.map((element, idx) => (
+            <option key={idx} value={element}>
+              {t.trip.weatherElement[element]}
+            </option>
+          ))}
+        </select>
+      </>
+    )
 
   return (
     <>
@@ -92,11 +88,11 @@ function Trip({ setError }: NotifiableContentContext) {
       }}>
         {tripFromInput(t.trip.dateTime, "time", "datetime-local", true)}
         {tripFromInput(t.trip.location, "location", "text", true)}
-        {tripFormSelection(t.trip.environment, "environment", environmentList)}
+        {tripEnvironmentSelection(t.trip.environment, "environment", environmentList)}
         {tripFromInput(t.trip.durationInHours, "hours", "number")}
         {tripFromInput(t.trip.temperature, "temperature", "number")}
         {tripFromInput(t.trip.waterLevel, "waterLevel", "number")}
-        {tripFormSelection(t.trip.weather, "weather", weatherList, true)}
+        {tripWeatherSelection(t.trip.weather, "weather", weatherList)}
         {tripFromInput(t.trip.notes, "notes", "text")}
         <div>
           <button className="form-submit-button" type="submit">{t.trip.createTrip}</button>

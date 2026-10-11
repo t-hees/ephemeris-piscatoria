@@ -1,8 +1,8 @@
-import { environmentList } from "../components/api/Trip";
+import { type environmentType } from "../components/api/Trip";
 
 export type TripSearchParams = {
   location: string,
-  environment: typeof environmentList[number] | "",
+  environment: environmentType | "",
   from: string,
   to: string,
 }

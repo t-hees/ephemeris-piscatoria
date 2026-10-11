@@ -5,6 +5,6 @@ import java.util.Set;
 
 import com.tadeo.fish_project.entity.Trip;
 
-public record TripReturnDto (Long id, String location, Trip.Environment environment, LocalDateTime time,
+public record TripReturnDto (Long id, String location, Trip.Environment environment, LocalDateTime time, 
     Long hours, Long temperature, Long waterLevel,
     Set<Trip.Weather> weather, String notes){};
