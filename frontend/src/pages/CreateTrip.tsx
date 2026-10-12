@@ -46,8 +46,8 @@ function Trip({ setError }: NotifiableContentContext) {
       <>
         <label className="form-label">{labelText}: </label>
         <select
-          value={trip[dtoElement]}
-          onChange={(e) => setTripDto({...trip, [dtoElement]: e.target.value})}
+          value={trip[dtoElement] ?? ""}
+          onChange={(e) => setTripDto({...trip, [dtoElement]: e.target.value || undefined})}
         >
           <option value="">----</option>
           {environmentList.map((element, idx) => (
@@ -59,23 +59,28 @@ function Trip({ setError }: NotifiableContentContext) {
       </>
     )
 
-  const tripWeatherSelection = (labelText: string, dtoElement: keyof TripDto,
-    weatherList: readonly weatherType[]) => (
-      <>
-        <label className="form-label">{labelText}: </label>
-        <select
-          value={trip[dtoElement]}
-          multiple
-          onChange={(e) => setTripDto({...trip, [dtoElement]: Array.from(e.target.selectedOptions, (option) => option.value)})}
-        >
-          <option value="">----</option>
-          {weatherList.map((element, idx) => (
-            <option key={idx} value={element}>
-              {t.trip.weatherElement[element]}
-            </option>
-          ))}
-        </select>
-      </>
+  const toggleWeather = (element: weatherType) => {
+    const selected = trip.weather ?? [];
+    setTripDto({...trip, weather: selected.includes(element)
+      ? selected.filter((el) => el !== element)
+      : [...selected, element]});
+  }
+
+  const tripWeatherSelection = (labelText: string, weatherList: readonly weatherType[]) => (
+      <fieldset className="chip-fieldset">
+        <legend className="form-label">{labelText}: </legend>
+        <div className="chip-group">
+          {weatherList.map((element) => {
+            const checked = trip.weather?.includes(element) ?? false;
+            return (
+              <label key={element} className={checked ? "chip chip-selected" : "chip"}>
+                <input type="checkbox" checked={checked} onChange={() => toggleWeather(element)} />
+                {t.trip.weatherElement[element]}
+              </label>
+            );
+          })}
+        </div>
+      </fieldset>
     )
 
   return (
@@ -92,7 +97,7 @@ function Trip({ setError }: NotifiableContentContext) {
         {tripFromInput(t.trip.durationInHours, "hours", "number")}
         {tripFromInput(t.trip.temperature, "temperature", "number")}
         {tripFromInput(t.trip.waterLevel, "waterLevel", "number")}
-        {tripWeatherSelection(t.trip.weather, "weather", weatherList)}
+        {tripWeatherSelection(t.trip.weather, weatherList)}
         {tripFromInput(t.trip.notes, "notes", "text")}
         <div>
           <button className="form-submit-button" type="submit">{t.trip.createTrip}</button>
