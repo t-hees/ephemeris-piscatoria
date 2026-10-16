@@ -76,7 +76,7 @@ textarea {
   color: inherit;
   background-color: #2b2b2b;
   border: 1px solid #4d4d4d;
-  /* border-radius: 6px; */
+  border-radius: 6px;
   padding: 0.5em 0.7em;
   box-sizing: border-box;
 }
@@ -85,6 +85,10 @@ select:focus,
 textarea:focus {
   outline: 2px solid #646cff;
   outline-offset: 1px;
+}
+
+hr {
+  margin-inline: 0;
 }
 
 .main-flex-container {
@@ -98,6 +102,12 @@ textarea:focus {
   max-width: 800px;
   text-align: center;
   box-sizing: border-box;
+}
+
+.catch-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .full-page {
@@ -229,10 +239,6 @@ textarea:focus {
 
 .form-error-container {
   color: red;
-}
-
-.search-bar {
-  
 }
 
 .scroll-container {

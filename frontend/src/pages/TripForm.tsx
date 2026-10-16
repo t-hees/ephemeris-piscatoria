@@ -266,7 +266,7 @@ function SimpleCatchEditor({ simpleCatches, setSimpleCatches, setError }: Simple
   }
 
   return (
-    <div>
+    <div className="catch-editor">
       <h2>{t.catches.simpleCatches}</h2>
       <ItemAutocomplete<SimpleFish>
         url="fish?name="
@@ -342,7 +342,7 @@ function SpecialCatchEditor({ oldSpecialCatches, removeOldSpecialCatch, specialC
   }
 
   return (
-    <div>
+    <div className="catch-editor">
       <h2>{t.catches.detailedCatches}</h2>
       <SpecialCatchList specialCatches={oldSpecialCatches} action={deleteSpecialCatchButton} />
       <ItemAutocomplete<SimpleFish>
