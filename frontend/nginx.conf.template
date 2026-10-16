@@ -70,7 +70,7 @@ server {
         proxy_pass http://${BACKEND_HOST}:${BACKEND_PORT};
     }
 
-    # Client side routes (e.g. /create-trip) are handled by the react router
+    # Client side routes (e.g. /trips/new) are handled by the react router
     location / {
         try_files $uri $uri/ /index.html;
     }

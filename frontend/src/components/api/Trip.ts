@@ -1,4 +1,6 @@
-export const environmentList = ["RIVER", "LAKE", "OCEAN"] as const;
+import type { SimpleCatchDto, SpecialCatchWithIdDto } from "./FishCatch";
+
+export const environmentList =["RIVER", "LAKE", "OCEAN"] as const;
 export const weatherList = [
         "CLEAR_SKY",
         "PARTLY_CLOUDY",
@@ -21,13 +23,25 @@ export const weatherList = [
 export type environmentType = typeof environmentList[number];
 export type weatherType = typeof weatherList[number];
 
-export type TripDto = {
+export type TripFields = {
   location: string,
-  environment: environmentType,
-  time: number,
-  hours: number,
-  temperature: number,
-  waterLevel: number,
+  environment: environmentType | null,
+  // Local date time like 2026-04-05T06:30
+  time: string,
+  hours: number | null,
+  temperature: number | null,
+  waterLevel: number | null,
   weather: weatherType[],
-  notes: string,
+  notes: string | null,
+}
+
+// Special catches are created and deleted one at a time, see SpecialCatchController in the backend
+export type TripDto = TripFields & {
+  simpleCatches: SimpleCatchDto[],
+}
+
+export type TripDetailDto = TripFields & {
+  id: number,
+  simpleCatches: SimpleCatchDto[],
+  specialCatches: SpecialCatchWithIdDto[],
 }

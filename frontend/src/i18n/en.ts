@@ -38,7 +38,9 @@ export const en: Translations = {
   },
   trip: {
     newTrip: "New fishing trip",
-    createTrip: "Create fishing trip",
+    editTrip: "Edit fishing trip",
+    saveTrip: "Save",
+    noTripId: "ERROR: No valid fishing trip provided",
     dateTime: "Date/Time",
     time: "Time",
     location: "Location",
@@ -73,7 +75,6 @@ export const en: Translations = {
       DAWN: "Dawn"
     },
     notes: "Notes",
-    editCatches: "Edit fish list",
     deleteTrip: "Delete entry",
     tripDeleted: "Fishing trip deleted",
     catches: "Catches",
@@ -92,10 +93,7 @@ export const en: Translations = {
     simpleCatches: "Simple fish entries",
     detailedCatches: "Detailed fish entries",
     deleteFish: "Delete fish",
-    submit: "Submit",
-    saved: "Catches saved",
     imageTooLarge: (megabytes: number) => `The photo is larger than ${megabytes} MB`,
     photoUploadDisabled: "Uploading photos is disabled in the demo.",
-    noTripId: "ERROR: No fishing trip provided",
   },
 };

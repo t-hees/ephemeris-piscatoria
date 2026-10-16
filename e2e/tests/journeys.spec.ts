@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { createTrip, field, login, loginAsAdmin, register, registerAndLogin, selectFish, tripCard, uniqueUser } from './helpers';
+import { createTrip, editTrip, field, fillNewTrip, login, loginAsAdmin, register, registerAndLogin, saveTrip, selectFish, tripCard, uniqueUser } from './helpers';
 
 const onePixelPng = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64');
@@ -32,21 +32,16 @@ test('create a trip', async ({ page }) => {
   await expect(card.getByText('Noch keine Fänge erfasst.')).toBeVisible();
 });
 
-test('edit the catches of a trip', async ({ page }) => {
+test('create a trip together with its catches', async ({ page }) => {
   await registerAndLogin(page);
-  await createTrip(page, 'Catch Lake', '2026-05-01T08:00');
-  const card = tripCard(page, 'Catch Lake');
-  await card.locator('.trip-card-header').click();
-  await card.getByRole('button', { name: 'Fischliste bearbeiten' }).click();
-
+  await fillNewTrip(page, 'Catch Lake', '2026-05-01T08:00');
   await selectFish(page, 0, 'Aalmutter', 'Aalmutter (Zoarces viviparus)');
   await page.locator('.quantity-row').getByRole('button', { name: '+' }).click();
   await selectFish(page, 1, 'Meeraal', 'Meeraal (Conger conger)');
   await field(page, 'Größe').fill('80');
-  await page.getByRole('button', { name: 'Absenden' }).click();
-  await expect(page.getByText('Fänge gespeichert')).toBeVisible();
+  await saveTrip(page, 'Catch Lake');
 
-  await page.getByRole('button', { name: 'HOME' }).click();
+  const card = tripCard(page, 'Catch Lake');
   await card.locator('.trip-card-header').click();
   const simpleCatch = card.locator('.simple-catch-table tr');
   await expect(simpleCatch.locator('td').nth(0)).toHaveText('Aalmutter (Zoarces viviparus)');
@@ -55,22 +50,42 @@ test('edit the catches of a trip', async ({ page }) => {
   await expect(card.getByText('Größe: 80')).toBeVisible();
 });
 
+test('edit a trip and its catches', async ({ page }) => {
+  await registerAndLogin(page);
+  await fillNewTrip(page, 'Old Lake', '2026-05-01T08:00');
+  await selectFish(page, 0, 'Aalmutter', 'Aalmutter (Zoarces viviparus)');
+  await selectFish(page, 1, 'Meeraal', 'Meeraal (Conger conger)');
+  await saveTrip(page, 'Old Lake');
+  await editTrip(page, 'Old Lake');
+
+  // Opened by its own url, which also works when loaded directly
+  await expect(page).toHaveURL(/\/trips\/\d+\/edit$/);
+  await page.reload();
+  await expect(field(page, 'Ort:')).toHaveValue('Old Lake');
+  await field(page, 'Ort:').fill('New Lake');
+  await page.getByRole('button', { name: 'Fisch löschen' }).click();
+  await saveTrip(page, 'New Lake');
+
+  await expect(tripCard(page, 'Old Lake')).toHaveCount(0);
+  const card = tripCard(page, 'New Lake');
+  await card.locator('.trip-card-header').click();
+  await expect(card.locator('.simple-catch-table td').nth(0)).toHaveText('Aalmutter (Zoarces viviparus)');
+  await expect(card.locator('.entry-list-item')).toHaveCount(0);
+});
+
 test('upload a photo of a catch as admin', async ({ page }) => {
   await loginAsAdmin(page);
   // The admin account outlives a single run, so its trips need unique names
   const location = `Photo Lake ${Date.now()}`;
   await createTrip(page, location, '2026-05-02T08:00');
-  const card = tripCard(page, location);
-  await card.locator('.trip-card-header').click();
-  await card.getByRole('button', { name: 'Fischliste bearbeiten' }).click();
+  await editTrip(page, location);
 
   await selectFish(page, 1, 'Meeraal', 'Meeraal (Conger conger)');
   await page.locator('input[type=file]').setInputFiles({ name: 'photo.png', mimeType: 'image/png', buffer: onePixelPng });
-  await page.getByRole('button', { name: 'Absenden' }).click();
-  await expect(page.getByText('Fänge gespeichert')).toBeVisible();
+  await saveTrip(page, location);
 
   // Loaded from the api with the auth cookie, a failed request would leave the image without size
-  await page.getByRole('button', { name: 'HOME' }).click();
+  const card = tripCard(page, location);
   await card.locator('.trip-card-header').click();
   const photo = card.getByAltText('Foto Meeraal (Conger conger)');
   await expect(photo).toBeVisible();
@@ -79,11 +94,7 @@ test('upload a photo of a catch as admin', async ({ page }) => {
 
 test('regular users cannot upload photos', async ({ page }) => {
   await registerAndLogin(page);
-  await createTrip(page, 'No Photo Lake', '2026-05-03T08:00');
-  const card = tripCard(page, 'No Photo Lake');
-  await card.locator('.trip-card-header').click();
-  await card.getByRole('button', { name: 'Fischliste bearbeiten' }).click();
-
+  await fillNewTrip(page, 'No Photo Lake', '2026-05-03T08:00');
   await selectFish(page, 1, 'Meeraal', 'Meeraal (Conger conger)');
   await expect(page.getByText('Das Hochladen von Fotos ist in der Demo deaktiviert.')).toBeVisible();
   await expect(page.locator('input[type=file]')).toHaveCount(0);

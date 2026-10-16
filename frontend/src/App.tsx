@@ -4,8 +4,7 @@ import LoginPage from './pages/LoginPage.tsx'
 import Navbar from './components/Navbar.tsx'
 import UserPage from './pages/UserPage.tsx'
 import Home from './pages/Home.tsx'
-import CreateTrip from './pages/CreateTrip.tsx'
-import EditCatch from './pages/EditCatch.tsx'
+import TripForm from './pages/TripForm.tsx'
 import { useEffect } from 'react'
 import { useAuth } from './util/AuthContext.tsx'
 
@@ -28,8 +27,8 @@ export default function App() {
                 <Route path="/" element={<Home />} />
                 <Route path="/fish-search" element={<FishSearch />} />
                 <Route path="/user" element={<UserPage />} />
-                <Route path="/create-trip" element={<CreateTrip />} />
-                <Route path="/edit-fish" element={<EditCatch />} />
+                <Route path="/trips/new" element={<TripForm />} />
+                <Route path="/trips/:id/edit" element={<TripForm />} />
               </>
             )
           }

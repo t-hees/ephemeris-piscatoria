@@ -44,11 +44,6 @@ export type SpecialCatchWithIdDto = {
   scientificName: string,
 }
 
-export type EditCatchesDto = {
-  simpleCatches: SimpleCatchDto[],
-  removableSpecialCatchIds: number[],
-}
-
 // Checked by the backend as well, this only saves uploading too large images
 export const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
 

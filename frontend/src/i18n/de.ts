@@ -38,7 +38,9 @@ export const de = {
   },
   trip: {
     newTrip: "Neuer Angelausflug",
-    createTrip: "Angelausflug erstellen",
+    editTrip: "Angelausflug bearbeiten",
+    saveTrip: "Speichern",
+    noTripId: "FEHLER: Kein gültiger Angelausflug angegeben",
     dateTime: "Tag/Uhrzeit",
     time: "Uhrzeit",
     location: "Ort",
@@ -73,7 +75,6 @@ export const de = {
       DAWN: "Morgendämmerung"
     } satisfies Record<weatherType, string>,
     notes: "Notizen",
-    editCatches: "Fischliste bearbeiten",
     deleteTrip: "Eintrag löschen",
     tripDeleted: "Angelausflug gelöscht",
     catches: "Fänge",
@@ -92,11 +93,8 @@ export const de = {
     simpleCatches: "Einfache Fischeinträge",
     detailedCatches: "Detaillierte Fischeinträge",
     deleteFish: "Fisch löschen",
-    submit: "Absenden",
-    saved: "Fänge gespeichert",
     imageTooLarge: (megabytes: number) => `Das Foto ist größer als ${megabytes} MB`,
     photoUploadDisabled: "Das Hochladen von Fotos ist in der Demo deaktiviert.",
-    noTripId: "FEHLER: Kein Angelausflug angegeben",
   },
 };
 

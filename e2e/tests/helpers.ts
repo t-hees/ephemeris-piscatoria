@@ -51,14 +51,29 @@ export async function loginAsAdmin(page: Page) {
   await expect(page.getByRole('button', { name: admin.username })).toBeVisible();
 }
 
-export async function createTrip(page: Page, location: string, time: string, environment = 'LAKE') {
+export async function fillNewTrip(page: Page, location: string, time: string, environment = 'LAKE') {
   await page.getByRole('button', { name: 'Neuer Angelausflug' }).click();
   await field(page, 'Tag/Uhrzeit:').fill(time);
   await field(page, 'Ort:').fill(location);
   await field(page, 'Gewässerart:', 'select').selectOption(environment);
   await field(page, 'Dauer(in h):').fill('3');
-  await page.getByRole('button', { name: 'Angelausflug erstellen' }).click();
+}
+
+// Saving returns to the trip list
+export async function saveTrip(page: Page, location: string) {
+  await page.getByRole('button', { name: 'Speichern' }).click();
   await expect(tripCard(page, location)).toBeVisible();
+}
+
+export async function createTrip(page: Page, location: string, time: string, environment = 'LAKE') {
+  await fillNewTrip(page, location, time, environment);
+  await saveTrip(page, location);
+}
+
+export async function editTrip(page: Page, location: string) {
+  const card = tripCard(page, location);
+  await card.locator('.trip-card-header').click();
+  await card.getByRole('button', { name: 'Angelausflug bearbeiten' }).click();
 }
 
 export function tripCard(page: Page, location: string): Locator {

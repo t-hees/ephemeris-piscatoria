@@ -5,12 +5,12 @@ import { Loading } from "../components/Loading";
 import { useNavigate } from "react-router-dom";
 import { useDebounce } from "../util/useDebounce";
 import "./Home.css";
-import { environmentList, type TripDto } from "../components/api/Trip";
+import { environmentList, type TripFields } from "../components/api/Trip";
 import { buildTripQuery, EMPTY_SEARCH_PARAMS, type TripSearchParams } from "../util/tripQuery";
 import { SimpleCatchList, SpecialCatchList, type AllCatchesDto, type SimpleCatchDto, type SpecialCatchWithIdDto } from "../components/api/FishCatch";
 import { useTranslation } from "../i18n/LanguageContext";
 
-type Trip = TripDto & {
+type Trip = TripFields & {
   id: number,
 }
 
@@ -123,7 +123,7 @@ function TripContainer ({ setError, setNotification, searchParams }: NotifiableC
   return (
     <div className="scroll-container">
       {loading && <Loading />}
-      <button type="button" onClick={() => navigate("/create-trip")}>
+      <button type="button" onClick={() => navigate("/trips/new")}>
         {t.trip.newTrip}
       </button>
       {tripList.map((trip) => {
@@ -149,7 +149,7 @@ function TripContainer ({ setError, setNotification, searchParams }: NotifiableC
                     <span>{trip.time.toString().split("T")[1]}</span>
                   </div>
                   <div className="trip-detail"><span className="label">{t.trip.environment}</span>
-                    <span>{t.trip.environmentElement[trip.environment]}</span>
+                    <span>{trip.environment ? t.trip.environmentElement[trip.environment] : "-"}</span>
                   </div>
                   <div className="trip-detail"><span className="label">{t.trip.duration}</span>
                     <span>{trip.hours ? t.trip.hours(trip.hours) : "-"}</span>
@@ -172,8 +172,8 @@ function TripContainer ({ setError, setNotification, searchParams }: NotifiableC
                 )}
                 {isExpanded && <TripCatches tripId={trip.id} setError={setError}/>}
                 <div className="trip-card-actions">
-                  <button type="button" onClick={() => navigate(`/edit-fish?id=${trip.id}`)}>
-                    {t.trip.editCatches}
+                  <button type="button" onClick={() => navigate(`/trips/${trip.id}/edit`)}>
+                    {t.trip.editTrip}
                   </button>
                   <button type="button" className="danger" onClick={() => tripDelete(trip.id)}>
                     {t.trip.deleteTrip}
