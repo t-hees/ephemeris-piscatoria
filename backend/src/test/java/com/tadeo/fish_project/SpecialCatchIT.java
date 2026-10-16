@@ -27,7 +27,6 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
 import com.tadeo.fish_project.dto.AllCatchesDto;
-import com.tadeo.fish_project.dto.EditCatchesDto;
 import com.tadeo.fish_project.dto.SpecialCatchDto;
 import com.tadeo.fish_project.dto.SpecialCatchWithIdDto;
 import com.tadeo.fish_project.dto.TripDto;
@@ -98,7 +97,7 @@ class SpecialCatchIT {
         tripId = testUserAuth.exchangeRestWithAuth("/api/trips", HttpMethod.POST,
             new ParameterizedTypeReference<TripReturnDto>() {},
             new TripDto("lake", Trip.Environment.LAKE, LocalDateTime.of(2026, 4, 5, 6, 30),
-                null, null, null, Set.of(), null),
+                null, null, null, Set.of(), null, null),
             HttpStatus.CREATED, "Failed to create trip").id();
     }
 
@@ -155,12 +154,33 @@ class SpecialCatchIT {
         SpecialCatchWithIdDto created = createSpecialCatch(new SpecialCatchDto(someFishId, null, null, null, null),
             encodedImage("png"));
 
-        testUserAuth.exchangeRestWithAuth("/api/trips/" + tripId + "/catches", HttpMethod.PUT,
-            new ParameterizedTypeReference<AllCatchesDto>() {},
-            new EditCatchesDto(List.of(), List.of(created.catchId())), HttpStatus.OK, "Failed to remove catch");
+        testUserAuth.exchangeNoContentWithAuth(specialCatchesUrl() + "/" + created.catchId(), HttpMethod.DELETE,
+            null, "Failed to remove catch");
 
         assertTrue(getSpecialCatches().isEmpty());
         assertEquals(HttpStatus.NOT_FOUND, getImage(TestUserAuth.username, created.imageUrl()).getStatusCode());
+    }
+
+    @Test
+    void testRemoveNonexistentSpecialCatch() {
+        ApiError error = testUserAuth.exchangeErrorAs(TestUserAuth.username, specialCatchesUrl() + "/-1",
+            HttpMethod.DELETE, null, HttpStatus.NOT_FOUND, "Unknown catch should not be found");
+        assertEquals("ENTITY_NOT_FOUND", error.code());
+    }
+
+    @Test
+    void testRemoveSpecialCatchOfOtherTrip() {
+        SpecialCatchWithIdDto created = createSpecialCatch(new SpecialCatchDto(someFishId, null, null, null, null),
+            null);
+        Long otherTripId = testUserAuth.exchangeRestWithAuth("/api/trips", HttpMethod.POST,
+            new ParameterizedTypeReference<TripReturnDto>() {},
+            new TripDto("pond", null, LocalDateTime.of(2026, 4, 6, 6, 30), null, null, null, Set.of(), null, null),
+            HttpStatus.CREATED, "Failed to create trip").id();
+
+        testUserAuth.exchangeErrorAs(TestUserAuth.username,
+            "/api/trips/" + otherTripId + "/special-catches/" + created.catchId(), HttpMethod.DELETE, null,
+            HttpStatus.NOT_FOUND, "Catch must only be removable through its own trip");
+        assertEquals(1, getSpecialCatches().size());
     }
 
     @Test
@@ -208,6 +228,8 @@ class SpecialCatchIT {
         assertEquals(HttpStatus.NOT_FOUND, getImage(other, created.imageUrl()).getStatusCode());
         assertEquals(HttpStatus.NOT_FOUND, postSpecialCatch(other,
             specialCatchParts(new SpecialCatchDto(someFishId, null, null, null, null), null)).getStatusCode());
+        testUserAuth.exchangeErrorAs(other, specialCatchesUrl() + "/" + created.catchId(), HttpMethod.DELETE, null,
+            HttpStatus.NOT_FOUND, "Other users must not remove the catch");
         assertEquals(1, getSpecialCatches().size());
     }
 
@@ -217,7 +239,7 @@ class SpecialCatchIT {
         Long otherTripId = testUserAuth.exchangeRestAs(other, "/api/trips", HttpMethod.POST,
             new ParameterizedTypeReference<TripReturnDto>() {},
             new TripDto("river", Trip.Environment.RIVER, LocalDateTime.of(2026, 4, 5, 6, 30),
-                null, null, null, Set.of(), null),
+                null, null, null, Set.of(), null, null),
             HttpStatus.CREATED, "Failed to create trip").id();
         String otherCatchesUrl = "/api/trips/" + otherTripId + "/special-catches";
 

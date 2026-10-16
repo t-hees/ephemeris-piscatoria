@@ -24,9 +24,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 
-import com.tadeo.fish_project.dto.AllCatchesDto;
 import com.tadeo.fish_project.dto.CurrentUserDto;
-import com.tadeo.fish_project.dto.EditCatchesDto;
 import com.tadeo.fish_project.dto.PasswordDto;
 import com.tadeo.fish_project.dto.SimpleCatchDto;
 import com.tadeo.fish_project.dto.SpecialCatchDto;
@@ -215,7 +213,7 @@ class UserIT {
         testUserAuth.exchangeRestWithAuth("/api/trips", HttpMethod.POST,
             new ParameterizedTypeReference<TripReturnDto>() {},
             new TripDto("lake", Trip.Environment.LAKE, LocalDateTime.of(2026, 4, 5, 6, 30),
-                null, null, null, Set.of(), null),
+                null, null, null, Set.of(), null, null),
             HttpStatus.CREATED, "Failed to create trip");
         jdbcTemplate.update("UPDATE user SET created_at = ? WHERE username IN (?, ?)",
             LocalDateTime.now().minusHours(2), TestUserAuth.username, admin);
@@ -325,13 +323,10 @@ class UserIT {
         Long tripId = testUserAuth.exchangeRestWithAuth("/api/trips", HttpMethod.POST,
             new ParameterizedTypeReference<TripReturnDto>() {},
             new TripDto("lake", Trip.Environment.LAKE, LocalDateTime.of(2026, 4, 5, 6, 30),
-                null, null, null, Set.of(), null),
+                null, null, null, Set.of(), null,
+                List.of(new SimpleCatchDto(fishId, 1, Optional.of(TestFishUtils.someFishCommonName),
+                    Optional.empty()))),
             HttpStatus.CREATED, "Failed to create trip").id();
-        testUserAuth.exchangeRestWithAuth("/api/trips/" + tripId + "/catches", HttpMethod.PUT,
-            new ParameterizedTypeReference<AllCatchesDto>() {},
-            new EditCatchesDto(List.of(new SimpleCatchDto(fishId, 1, Optional.of(TestFishUtils.someFishCommonName),
-                Optional.empty())), List.of()),
-            HttpStatus.OK, "Failed to add catches");
         ResponseEntity<String> specialCatch = testUserAuth.postMultipartAs(TestUserAuth.username,
             "/api/trips/" + tripId + "/special-catches",
             TestUtils.specialCatchParts(new SpecialCatchDto(fishId, 1l, 1l, null, null), TestUtils.encodedImage("png")),

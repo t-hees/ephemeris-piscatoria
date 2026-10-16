@@ -6,6 +6,7 @@ import java.time.Duration;
 import org.springframework.http.CacheControl;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -40,6 +41,12 @@ public class SpecialCatchController {
         return ResponseEntity
             .created(URI.create("/api/trips/" + tripId + "/special-catches/" + created.catchId()))
             .body(created);
+    }
+
+    @DeleteMapping("/{catchId}")
+    public ResponseEntity<Void> deleteSpecialCatch(@PathVariable Long tripId, @PathVariable Long catchId) {
+        tripService.deleteSpecialCatch(tripId, catchId);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{catchId}/image")

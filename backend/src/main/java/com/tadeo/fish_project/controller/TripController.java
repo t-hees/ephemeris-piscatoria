@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.tadeo.fish_project.entity.Trip;
 import com.tadeo.fish_project.service.TripService;
 import com.tadeo.fish_project.dto.AllCatchesDto;
-import com.tadeo.fish_project.dto.EditCatchesDto;
+import com.tadeo.fish_project.dto.TripDetailDto;
 import com.tadeo.fish_project.dto.TripDto;
 import com.tadeo.fish_project.dto.TripPageDto;
 import com.tadeo.fish_project.dto.TripReturnDto;
@@ -52,6 +52,19 @@ public class TripController {
         return ResponseEntity.created(URI.create("/api/trips/" + trip.id())).body(trip);
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<TripDetailDto> getTrip(@PathVariable Long id) {
+        return ResponseEntity.ok(tripService.getTrip(id));
+    }
+
+    /*
+    Replaces the fields and simple catches, special catches are changed through SpecialCatchController
+    */
+    @PutMapping("/{id}")
+    public ResponseEntity<TripReturnDto> updateTrip(@PathVariable Long id, @Valid @RequestBody TripDto tripDto) {
+        return ResponseEntity.ok(tripService.updateTrip(id, tripDto));
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteTrip(@PathVariable Long id) {
         tripService.deleteTrip(id);
@@ -60,16 +73,6 @@ public class TripController {
 
     @GetMapping("/{id}/catches")
     public ResponseEntity<AllCatchesDto> getCatches(@PathVariable Long id) {
-        return ResponseEntity.ok(tripService.getAllCatches(id));
-    }
-
-    /*
-    Replaces the simple catches, adds and removes special catches and returns the resulting catches
-    */
-    @PutMapping("/{id}/catches")
-    public ResponseEntity<AllCatchesDto> editCatches(@PathVariable Long id,
-            @Valid @RequestBody EditCatchesDto editCatchesDto) {
-        tripService.editCatches(id, editCatchesDto);
         return ResponseEntity.ok(tripService.getAllCatches(id));
     }
 }
