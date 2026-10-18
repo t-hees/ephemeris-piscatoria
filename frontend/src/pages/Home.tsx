@@ -55,6 +55,7 @@ function TripContainer ({ setError, setNotification, searchParams }: NotifiableC
   const [hasNext, setHasNext] = useState<boolean>(true);
   const [loading, setLoading] = useState<boolean>(false);
   const [expandedTrips, setExpandedTrips] = useState<Set<number>>(new Set());
+  const [deletionSelectedTrip, setDeletionSelectedTrip] = useState<number>();
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   const loadingRef = useRef<boolean>(false); // necessary to avoid reloading same page
   // Refs instead of state, as the observer may call loadNextPage after a page loaded but before the
@@ -175,9 +176,14 @@ function TripContainer ({ setError, setNotification, searchParams }: NotifiableC
                   <button type="button" onClick={() => navigate(`/trips/${trip.id}/edit`)}>
                     {t.trip.editTrip}
                   </button>
-                  <button type="button" className="danger" onClick={() => tripDelete(trip.id)}>
+                  <button type="button" className="danger" onClick={() => setDeletionSelectedTrip(trip.id)}>
                     {t.trip.deleteTrip}
                   </button>
+                  {deletionSelectedTrip === trip.id &&
+                    <button type="button" className="danger" onClick={() => tripDelete(trip.id)}>
+                      {t.trip.confirmDeletion}
+                    </button>
+                  }
                 </div>
               </div>
             </div>

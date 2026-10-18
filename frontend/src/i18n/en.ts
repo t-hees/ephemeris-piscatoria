@@ -76,6 +76,7 @@ export const en: Translations = {
     },
     notes: "Notes",
     deleteTrip: "Delete entry",
+    confirmDeletion: "Confirm deletion",
     tripDeleted: "Fishing trip deleted",
     catches: "Catches",
     noCatches: "No catches recorded yet.",

@@ -76,6 +76,7 @@ export const de = {
     } satisfies Record<weatherType, string>,
     notes: "Notizen",
     deleteTrip: "Eintrag löschen",
+    confirmDeletion: "Löschvorgang bestätigen",
     tripDeleted: "Angelausflug gelöscht",
     catches: "Fänge",
     noCatches: "Noch keine Fänge erfasst.",
