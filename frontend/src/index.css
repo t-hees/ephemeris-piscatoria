@@ -1,11 +1,44 @@
 :root {
+  --palette-1: #181923;
+  --palette-2: #292d41;
+  --palette-3: #38405d;
+  --palette-4: #4c546d;
+  --palette-5: #6f687a;
+  --palette-6: #8b7983;
+  --palette-7: #a58d89;
+  --palette-8: #b59e90;
+
+  --color-bg: var(--palette-1);
+  --color-surface: var(--palette-2);
+  --color-surface-raised: var(--palette-3);
+  --color-input-bg: var(--palette-1);
+  --color-border: var(--palette-3);
+  --color-border-strong: var(--palette-4);
+
+  --color-text: var(--palette-8);
+  --color-text-secondary: var(--palette-7);
+  --color-text-muted: var(--palette-6);
+  --color-accent: var(--palette-8);
+  --color-accent-hover: var(--palette-7);
+
+  --color-button: var(--palette-3);
+  --color-button-hover: var(--palette-4);
+  --color-danger: var(--palette-7);
+  --color-danger-hover: var(--palette-8);
+  --color-danger-text: var(--palette-1);
+
+  --color-success: var(--palette-8);
+  --color-error: var(--palette-7);
+
+  --shadow-color: color-mix(in srgb, var(--palette-1) 60%, transparent);
+
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
   color-scheme: dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  color: var(--color-text);
+  background-color: var(--color-bg);
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -22,12 +55,12 @@
 
 a {
   font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
+  color: var(--color-accent);
+  text-decoration: underline;
 }
 
 a:hover {
-  color: #535bf2;
+  color: var(--color-accent-hover);
 }
 
 #main-content-container {
@@ -49,23 +82,26 @@ button {
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
-  background-color: #2C3E50;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  color: var(--color-text);
+  background-color: var(--color-button);
+  box-shadow: 0 4px 8px var(--shadow-color);
   cursor: pointer;
   transition: border-color 0.25s;
 }
 button:hover {
-  background-color: #415162;
+  background-color: var(--color-button-hover);
 }
 button:focus,
 button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
 }
 button.danger {
-  background-color: #7a2b2b;
+  color: var(--color-danger-text);
+  background-color: var(--color-danger);
 }
 button.danger:hover {
-  background-color: #963636;
+  background-color: var(--color-danger-hover);
 }
 
 input,
@@ -74,8 +110,8 @@ textarea {
   font-family: inherit;
   font-size: 1em;
   color: inherit;
-  background-color: #2b2b2b;
-  border: 1px solid #4d4d4d;
+  background-color: var(--color-input-bg);
+  border: 1px solid var(--color-border-strong);
   border-radius: 6px;
   padding: 0.5em 0.7em;
   box-sizing: border-box;
@@ -83,22 +119,24 @@ textarea {
 input:focus,
 select:focus,
 textarea:focus {
-  outline: 2px solid #646cff;
+  outline: 2px solid var(--color-accent);
   outline-offset: 1px;
 }
 
 hr {
   margin-inline: 0;
+  border: none;
+  border-top: 1px solid var(--color-border-strong);
 }
 
 .main-flex-container {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  background-color: #333;
+  background-color: var(--color-surface);
   padding: 60px;
   border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 4px 8px var(--shadow-color);
   max-width: 800px;
   text-align: center;
   box-sizing: border-box;
@@ -137,20 +175,20 @@ hr {
   gap: 6px;
 }
 .chip {
-  border: 1px solid #4d4d4d;
+  border: 1px solid var(--color-border-strong);
   padding: 0.3em 0.9em;
-  background-color: #2b2b2b;
+  background-color: var(--color-input-bg);
   cursor: pointer;
   user-select: none;
   font-size: 0.9em;
   transition: background-color 0.15s, border-color 0.15s;
 }
 .chip:hover {
-  border-color: #646cff;
+  border-color: var(--color-accent);
 }
 .chip-selected {
-  background-color: #2C3E50;
-  border-color: #646cff;
+  background-color: var(--color-button);
+  border-color: var(--color-accent);
 }
 .chip input {
   position: absolute;
@@ -159,7 +197,7 @@ hr {
   height: 0;
 }
 .chip:has(input:focus-visible) {
-  outline: 2px solid #646cff;
+  outline: 2px solid var(--color-accent);
   outline-offset: 1px;
 }
 
@@ -169,7 +207,7 @@ hr {
 
 .label,
 .section-title {
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--color-text-secondary);
   font-size: 0.85em;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -181,7 +219,7 @@ hr {
 
 .empty-state {
   margin: 0 0 8px;
-  color: rgba(255, 255, 255, 0.45);
+  color: var(--color-text-muted);
   font-style: italic;
 }
 
@@ -196,7 +234,7 @@ hr {
   text-align: left;
 }
 .entry-list-item {
-  background-color: #3a3a3a;
+  background-color: var(--color-surface-raised);
   border-radius: 8px;
   padding: 10px 14px;
 }
@@ -205,7 +243,7 @@ hr {
 }
 .entry-list-item p {
   margin: 2px 0;
-  color: rgba(255, 255, 255, 0.75);
+  color: var(--color-text-secondary);
 }
 .entry-list-item img {
   max-width: 100%;
@@ -226,19 +264,19 @@ hr {
 }
 .simple-catch-table td {
   padding: 4px 0;
-  border-bottom: 1px solid #3d3d3d;
+  border-bottom: 1px solid var(--color-border);
 }
 .simple-catch-table td:last-child {
   text-align: right;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--color-text-secondary);
 }
 
 .form-notification-container {
-  color: #1c9b2f;
+  color: var(--color-success);
 }
 
 .form-error-container {
-  color: red;
+  color: var(--color-error);
 }
 
 .scroll-container {
@@ -247,4 +285,5 @@ hr {
   gap: 10px;
   overflow-y: auto;
   text-align: center;
+  padding: 3px;
 }

@@ -6,13 +6,13 @@ nav {
   top: 0;
   left: 0;
   right: 0;
-  background-color: #333;
-  color: white;
+  background-color: var(--color-surface);
+  color: var(--color-text);
   z-index: 1000;
 }
 
 nav a {
-  color: white;
+  color: var(--color-text);
   text-decoration: none;
 }
 
