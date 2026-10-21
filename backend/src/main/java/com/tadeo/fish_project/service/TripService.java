@@ -180,14 +180,16 @@ public class TripService {
     }
 
     public TripPageDto listAllTrips(int page, int size, String location, Trip.Environment environment,
-        LocalDate from, LocalDate to) {
+        LocalDate from, LocalDate to, Integer minCatches) {
 
         User user = userService.getUser();
         LocalDateTime fromDateTime = (from != null) ? from.atStartOfDay() : null;
         LocalDateTime toDateTime = (to != null) ? to.atTime(23, 59, 59) : null;
         Page<Trip> tripPage = tripRepository.search(user,
             (location != null && !location.isBlank()) ? location : null,
-            environment, fromDateTime, toDateTime, PageRequest.of(page, size));
+            environment, fromDateTime, toDateTime,
+            (minCatches != null && minCatches == 0) ? null : minCatches,
+            PageRequest.of(page, size));
         List<TripReturnDto> trips = tripPage.getContent().stream()
             .map(TripService::toReturnDto)
             .collect(Collectors.toList());

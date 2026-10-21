@@ -48,4 +48,9 @@ public class TestFishUtils {
     public Long fishId(String scientificName) {
         return fishRepository.findByScientificName(scientificName).get().getId();
     }
+
+    // Return another fish id than the one returned by initializeFish
+    public Long otherFishId() {
+        return fishId(congerScientificName);
+    }
 }

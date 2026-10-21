@@ -346,6 +346,25 @@ class TripIT {
     }
 
     @Test
+    void testSearchByMinCatches() {
+        // first trip with 1 special and 1 simple fish
+        Long tripId = firstTripId();
+        testUserAuth.postMultipartAs(TestUserAuth.username, tripUrl(tripId) + "/special-catches",
+            TestUtils.specialCatchParts(new SpecialCatchDto(someFishId, null, null, null, null), null),
+            new ParameterizedTypeReference<String>() {});
+        editCatches(tripId, simpleCatch(someFishId, 1, null));
+
+        // new trip with 2 + 3 simple fish
+        createTrip(new TripDto("River Bend", Trip.Environment.RIVER, LocalDateTime.of(2026, 6, 1, 9, 0),
+            2l, 20l, 100l, Set.of(Trip.Weather.CLOUDY), "river notes",
+            List.of(simpleCatch(someFishId, 2, null), simpleCatch(testFishUtils.otherFishId(), 3, null))));
+
+        assertEquals(2, searchTrips("minCatches=2").size(), "Min catches should encompass both simple and special catches (and be >=)");
+        assertEquals(1, searchTrips("minCatches=5").size(), "The trip with only 2 fish should be filtered out");
+        assertEquals(0, searchTrips("minCatches=6").size(), "Both tripss should be filtered out");
+    }
+
+    @Test
     void testSearchDateRangeIncludesWholeBoundaryDays() {
         createTrip(tripAt("late", LocalDateTime.of(2026, 6, 1, 23, 30)));
         createTrip(tripAt("early", LocalDateTime.of(2026, 6, 1, 0, 0)));

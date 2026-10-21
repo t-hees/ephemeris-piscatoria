@@ -36,13 +36,14 @@ public class TripController {
 
     @GetMapping
     public ResponseEntity<TripPageDto> listTrips(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(required = false) String location,
-            @RequestParam(required = false) Trip.Environment environment,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
-        TripPageDto trips = tripService.listAllTrips(page, Math.min(size, MAX_PAGE_SIZE), location, environment, from, to);
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size,
+        @RequestParam(required = false) String location,
+        @RequestParam(required = false) Trip.Environment environment,
+        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+        @RequestParam(required = false) Integer minCatches) {
+        TripPageDto trips = tripService.listAllTrips(page, Math.min(size, MAX_PAGE_SIZE), location, environment, from, to, minCatches);
         return ResponseEntity.ok(trips);
     }
 

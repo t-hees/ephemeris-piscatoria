@@ -26,6 +26,10 @@ install: ## Install the node dependencies of frontend and e2e
 db: ## Start only the database container, for running the backend locally
 	$(COMPOSE) up -d db
 
+.PHONY: test-db
+test-db: ## Start only the test database container
+	$(COMPOSE_TEST) up -d test-db
+
 .PHONY: backend-run
 backend-run: ## Run the backend with the variables from .env
 	$(LOAD_ENV); cd backend && $(MVN) spring-boot:run
