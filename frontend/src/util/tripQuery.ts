@@ -5,9 +5,10 @@ export type TripSearchParams = {
   environment: environmentType | "",
   from: string,
   to: string,
+  minCatches: string
 }
 
-export const EMPTY_SEARCH_PARAMS: TripSearchParams = { location: "", environment: "", from: "", to: "" };
+export const EMPTY_SEARCH_PARAMS: TripSearchParams = { location: "", environment: "", from: "", to: "", minCatches: ""};
 
 export function buildTripQuery(page: number, size: number, searchParams: TripSearchParams): string {
   const params = new URLSearchParams({ page: String(page), size: String(size) });
@@ -15,5 +16,6 @@ export function buildTripQuery(page: number, size: number, searchParams: TripSea
   if (searchParams.environment) params.set("environment", searchParams.environment);
   if (searchParams.from) params.set("from", searchParams.from);
   if (searchParams.to) params.set("to", searchParams.to);
+  if (searchParams.minCatches) params.set("minCatches", searchParams.minCatches);
   return params.toString();
 }

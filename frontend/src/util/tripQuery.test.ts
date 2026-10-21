@@ -12,6 +12,7 @@ describe("buildTripQuery", () => {
       environment: "LAKE",
       from: "2026-01-01",
       to: "2026-02-01",
+      minCatches: "2"
     }));
     expect(Object.fromEntries(query)).toEqual({
       page: "0",
@@ -20,6 +21,7 @@ describe("buildTripQuery", () => {
       environment: "LAKE",
       from: "2026-01-01",
       to: "2026-02-01",
+      minCatches: "2"
     });
   });
 

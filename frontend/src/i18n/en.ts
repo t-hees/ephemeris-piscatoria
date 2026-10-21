@@ -84,6 +84,7 @@ export const en: Translations = {
     allEnvironments: "All waters",
     from: "From",
     to: "To",
+    minCatches: "Fish >=",
   },
   catches: {
     photo: "Photo",

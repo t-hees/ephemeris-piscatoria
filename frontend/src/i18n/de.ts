@@ -84,6 +84,7 @@ export const de = {
     allEnvironments: "Alle Gewässer",
     from: "Von",
     to: "Bis",
+    minCatches: "Fische >=",
   },
   catches: {
     photo: "Foto",

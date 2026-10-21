@@ -188,7 +188,7 @@ public class TripService {
         Page<Trip> tripPage = tripRepository.search(user,
             (location != null && !location.isBlank()) ? location : null,
             environment, fromDateTime, toDateTime,
-            (minCatches != null && minCatches == 0) ? null : minCatches,
+            (minCatches != null && minCatches <= 0) ? null : minCatches,
             PageRequest.of(page, size));
         List<TripReturnDto> trips = tripPage.getContent().stream()
             .map(TripService::toReturnDto)

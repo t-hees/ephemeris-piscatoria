@@ -269,6 +269,15 @@ function TripSearchBar({ onSearch }: { onSearch: (searchParams: TripSearchParams
         value={rawParams.to}
         onChange={(e) => setRawParams({ ...rawParams, to: e.target.value })}
       />
+      <label className="form-label">{t.trip.minCatches}</label>
+      <input
+        className="trip-number-input"
+        type="number"
+        min="0"
+        max="999"
+        value={rawParams.minCatches}
+        onChange={(e) => setRawParams({ ...rawParams, minCatches: e.target.value })}
+      />
     </div>
   );
 }

@@ -115,6 +115,30 @@ test('search filters the trip list', async ({ page }) => {
   await expect(tripCard(page, 'River Bend')).toHaveCount(0);
 });
 
+test('minimum catches filter counts simple and special catches', async ({ page }) => {
+  await registerAndLogin(page);
+  await fillNewTrip(page, 'Full Net', '2026-06-01T09:00');
+  await selectFish(page, 0, 'Aalmutter', 'Aalmutter (Zoarces viviparus)');
+  await page.locator('.quantity-row').getByRole('button', { name: '+' }).click();
+  await selectFish(page, 1, 'Meeraal', 'Meeraal (Conger conger)');
+  await saveTrip(page, 'Full Net');
+  await fillNewTrip(page, 'Single Fish', '2026-06-02T09:00');
+  await selectFish(page, 0, 'Aalmutter', 'Aalmutter (Zoarces viviparus)');
+  await saveTrip(page, 'Single Fish');
+
+  // 2 simple + 1 special catch, neither alone reaches the minimum
+  await field(page, 'Fische >=').fill('3');
+  await expect(tripCard(page, 'Full Net')).toBeVisible();
+  await expect(tripCard(page, 'Single Fish')).toHaveCount(0);
+
+  await field(page, 'Fische >=').fill('4');
+  await expect(tripCard(page, 'Full Net')).toHaveCount(0);
+
+  await field(page, 'Fische >=').fill('0');
+  await expect(tripCard(page, 'Full Net')).toBeVisible();
+  await expect(tripCard(page, 'Single Fish')).toBeVisible();
+});
+
 test('trips of other users are not visible', async ({ page, browser }) => {
   await registerAndLogin(page);
   await createTrip(page, 'Secret Spot', '2026-06-01T09:00');

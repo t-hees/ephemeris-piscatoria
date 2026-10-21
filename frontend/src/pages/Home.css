@@ -120,3 +120,7 @@
   flex-wrap: wrap;
   padding: 14px 18px 18px;
 }
+
+.trip-number-input {
+  max-width: 7.5ch;
+}
