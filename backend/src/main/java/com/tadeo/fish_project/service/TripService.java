@@ -28,6 +28,8 @@ import com.tadeo.fish_project.exception.QuotaExceededException;
 import com.tadeo.fish_project.exception.SpecialCatchNotFoundException;
 import com.tadeo.fish_project.exception.TripNotFoundException;
 import com.tadeo.fish_project.entity.Image;
+import com.tadeo.fish_project.dto.GalleryCatchDto;
+import com.tadeo.fish_project.dto.GalleryCatchPageDto;
 import com.tadeo.fish_project.dto.SpecialCatchDto;
 import com.tadeo.fish_project.dto.TripDetailDto;
 import com.tadeo.fish_project.dto.TripDto;
@@ -38,6 +40,7 @@ import com.tadeo.fish_project.dto.SimpleCatchDto;
 import com.tadeo.fish_project.dto.SpecialCatchWithIdDto;
 import com.tadeo.fish_project.repository.SpecialCatchRepository;
 import com.tadeo.fish_project.repository.TripRepository;
+import com.tadeo.fish_project.repository.TripSpecialCatch;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -194,6 +197,38 @@ public class TripService {
             .map(TripService::toReturnDto)
             .collect(Collectors.toList());
         return new TripPageDto(trips, tripPage.hasNext(), tripPage.getTotalElements());
+    }
+
+    /*
+    Transactional as the weather of the trips is loaded lazily
+    */
+    @Transactional
+    public GalleryCatchPageDto listSpecialCatches(int page, int size, String species, String location,
+        LocalDate from, LocalDate to, Long minSize, Long minWeight, boolean withImage) {
+
+        User user = userService.getUser();
+        Map<Long, String> fishNames = user.getFishNames();
+        Page<TripSpecialCatch> catchPage = specialCatchRepository.search(user,
+            (species != null && !species.isBlank()) ? species.trim() : null,
+            (location != null && !location.isBlank()) ? location : null,
+            (from != null) ? from.atStartOfDay() : null,
+            (to != null) ? to.atTime(23, 59, 59) : null,
+            minSize, minWeight, withImage,
+            PageRequest.of(page, size));
+        List<GalleryCatchDto> catches = catchPage.getContent().stream()
+            .map(tripCatch -> {
+                Trip trip = tripCatch.trip();
+                return new GalleryCatchDto(
+                    toSpecialCatchDto(trip.getId(), tripCatch.specialCatch(), fishNames),
+                    trip.getId(),
+                    trip.getLocation(),
+                    trip.getEnvironment(),
+                    trip.getTime(),
+                    (trip.getDuration() != null) ? trip.getDuration().toHours() : null,
+                    Set.copyOf(trip.getWeather()));
+            })
+            .collect(Collectors.toList());
+        return new GalleryCatchPageDto(catches, catchPage.hasNext(), catchPage.getTotalElements());
     }
 
     private Trip findOwnTrip(Long tripId) {
