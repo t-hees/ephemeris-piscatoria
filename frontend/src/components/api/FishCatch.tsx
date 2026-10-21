@@ -1,6 +1,7 @@
 import type { JSX } from "react";
 import { useTranslation } from "../../i18n/LanguageContext";
 import { fishLabel } from "../../util/fishLabel";
+import type { environmentType, weatherType } from "./Trip";
 
 export type SimpleFish = {
   id: number,
@@ -42,6 +43,23 @@ export type SpecialCatchWithIdDto = {
   notes: string|null,
   name: string|null,
   scientificName: string,
+}
+
+// A special catch with the basic fields of its trip, see CatchGalleryController in the backend
+export type GalleryCatchDto = {
+  specialCatch: SpecialCatchWithIdDto,
+  tripId: number,
+  location: string,
+  environment: environmentType | null,
+  time: string,
+  hours: number | null,
+  weather: weatherType[],
+}
+
+export type GalleryCatchPageDto = {
+  catches: GalleryCatchDto[],
+  hasNext: boolean,
+  totalElements: number,
 }
 
 // Checked by the backend as well, this only saves uploading too large images

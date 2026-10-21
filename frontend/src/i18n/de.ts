@@ -10,6 +10,7 @@ export const de = {
   },
   navbar: {
     home: "HOME",
+    gallery: "FÄNGE",
     login: "LOGIN",
     logout: "LOGOUT",
     switchLanguage: "Sprache wechseln",
@@ -97,6 +98,17 @@ export const de = {
     deleteFish: "Fisch löschen",
     imageTooLarge: (megabytes: number) => `Das Foto ist größer als ${megabytes} MB`,
     photoUploadDisabled: "Das Hochladen von Fotos ist in der Demo deaktiviert.",
+  },
+  gallery: {
+    searchSpecies: "Fischart suchen...",
+    minSize: "Größe >=",
+    minWeight: "Gewicht >=",
+    withImage: "Nur mit Foto",
+    noPhoto: "Kein Foto",
+    noCatches: "Keine detaillierten Fänge gefunden.",
+    trip: "Angelausflug",
+    openPhoto: "Foto öffnen",
+    close: "Schließen",
   },
 };
 

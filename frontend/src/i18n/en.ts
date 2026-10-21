@@ -10,6 +10,7 @@ export const en: Translations = {
   },
   navbar: {
     home: "HOME",
+    gallery: "CATCHES",
     login: "LOGIN",
     logout: "LOGOUT",
     switchLanguage: "Switch language",
@@ -97,5 +98,16 @@ export const en: Translations = {
     deleteFish: "Delete fish",
     imageTooLarge: (megabytes: number) => `The photo is larger than ${megabytes} MB`,
     photoUploadDisabled: "Uploading photos is disabled in the demo.",
+  },
+  gallery: {
+    searchSpecies: "Search species...",
+    minSize: "Size >=",
+    minWeight: "Weight >=",
+    withImage: "Only with photo",
+    noPhoto: "No photo",
+    noCatches: "No detailed catches found.",
+    trip: "Fishing trip",
+    openPhoto: "Open photo",
+    close: "Close",
   },
 };

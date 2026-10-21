@@ -24,6 +24,9 @@ export default function Navbar() {
       </button>
       {name
         ? <>
+            <button type="button" onClick={() => navigate("/catches")}>
+              {t.navbar.gallery}
+            </button>
             <button type="button" onClick={() => navigate("/user")}>
               {name}
             </button>

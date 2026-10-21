@@ -139,6 +139,33 @@ test('minimum catches filter counts simple and special catches', async ({ page }
   await expect(tripCard(page, 'Single Fish')).toBeVisible();
 });
 
+test('gallery shows detailed catches and leads to their trip', async ({ page }) => {
+  await registerAndLogin(page);
+  await fillNewTrip(page, 'Eel Lake', '2026-06-01T09:00');
+  await selectFish(page, 1, 'Meeraal', 'Meeraal (Conger conger)');
+  await field(page, 'Größe').fill('120');
+  await saveTrip(page, 'Eel Lake');
+  await fillNewTrip(page, 'Pout Bay', '2026-06-02T09:00');
+  await selectFish(page, 1, 'Aalmutter', 'Aalmutter (Zoarces viviparus)');
+  await saveTrip(page, 'Pout Bay');
+
+  await page.getByRole('button', { name: 'FÄNGE' }).click();
+  const tiles = page.locator('.gallery-tile');
+  await expect(tiles).toHaveCount(2);
+  await expect(tiles.first().getByText('Kein Foto')).toBeVisible();
+
+  await page.getByPlaceholder('Fischart suchen...').fill('conger');
+  await expect(tiles).toHaveCount(1);
+  await tiles.getByText('Meeraal').click();
+
+  const expanded = page.locator('.gallery-tile.expanded');
+  await expect(expanded.getByText('Eel Lake')).toBeVisible();
+  await expect(expanded.getByText('120')).toBeVisible();
+  await expanded.getByRole('button', { name: 'Angelausflug bearbeiten' }).click();
+  await expect(page).toHaveURL(/\/trips\/\d+\/edit$/);
+  await expect(field(page, 'Ort:')).toHaveValue('Eel Lake');
+});
+
 test('trips of other users are not visible', async ({ page, browser }) => {
   await registerAndLogin(page);
   await createTrip(page, 'Secret Spot', '2026-06-01T09:00');

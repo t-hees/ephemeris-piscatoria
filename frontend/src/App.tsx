@@ -5,6 +5,7 @@ import Navbar from './components/Navbar.tsx'
 import UserPage from './pages/UserPage.tsx'
 import Home from './pages/Home.tsx'
 import TripForm from './pages/TripForm.tsx'
+import Gallery from './pages/Gallery.tsx'
 import { useEffect } from 'react'
 import { useAuth } from './util/AuthContext.tsx'
 
@@ -25,6 +26,7 @@ export default function App() {
             && (
               <>
                 <Route path="/" element={<Home />} />
+                <Route path="/catches" element={<Gallery />} />
                 <Route path="/fish-search" element={<FishSearch />} />
                 <Route path="/user" element={<UserPage />} />
                 <Route path="/trips/new" element={<TripForm />} />
