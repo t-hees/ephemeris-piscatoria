@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { NotifiableContainer, type NotifiableContentContext, type WrappedComponent } from "../components/NotifiableContainer";
 import { fetchApi } from "../util/fetchApi";
 import { Loading } from "../components/Loading";
@@ -9,6 +9,7 @@ import { environmentList, type TripFields } from "../components/api/Trip";
 import { buildTripQuery, EMPTY_SEARCH_PARAMS, type TripSearchParams } from "../util/tripQuery";
 import { SimpleCatchList, SpecialCatchList, type AllCatchesDto, type SimpleCatchDto, type SpecialCatchWithIdDto } from "../components/api/FishCatch";
 import { useTranslation } from "../i18n/LanguageContext";
+import { useInfiniteList, type ListPage } from "../util/useInfiniteList";
 
 type Trip = TripFields & {
   id: number,
@@ -22,6 +23,8 @@ type TripPageDto = {
 
 const TRIP_PAGE_SIZE = 10;
 const SEARCH_DEBOUNCE_MS = 400;
+
+const toTripListPage = (tripPage: TripPageDto): ListPage<Trip> => ({ items: tripPage.trips, hasNext: tripPage.hasNext });
 
 export default function Home() {
   const [searchParams, setSearchParams] = useState<TripSearchParams>(EMPTY_SEARCH_PARAMS);
@@ -51,57 +54,14 @@ export default function Home() {
 
 function TripContainer ({ setError, setNotification, searchParams }: NotifiableContentContext & { searchParams: TripSearchParams }) {
   const navigate = useNavigate();
-  const [tripList, setTripList] = useState<Trip[]>([]);
-  const [hasNext, setHasNext] = useState<boolean>(true);
-  const [loading, setLoading] = useState<boolean>(false);
+  const pagePath = useCallback((page: number) => `trips?${buildTripQuery(page, TRIP_PAGE_SIZE, searchParams)}`,
+    [searchParams]);
+  const { items: tripList, setItems: setTripList, hasNext, loading, sentinelRef }
+    = useInfiniteList<Trip, TripPageDto>(pagePath, toTripListPage, setError);
+  const [deleting, setDeleting] = useState<boolean>(false);
   const [expandedTrips, setExpandedTrips] = useState<Set<number>>(new Set());
   const [deletionSelectedTrip, setDeletionSelectedTrip] = useState<number>();
-  const sentinelRef = useRef<HTMLDivElement | null>(null);
-  const loadingRef = useRef<boolean>(false); // necessary to avoid reloading same page
-  // Refs instead of state, as the observer may call loadNextPage after a page loaded but before the
-  // rerender replaced its closure, which would otherwise load (and append) the same page again
-  const pageRef = useRef<number>(0);
-  const hasNextRef = useRef<boolean>(true);
   const { t } = useTranslation();
-
-  const loadNextPage = useCallback(() => {
-    if (loadingRef.current || !hasNextRef.current) return;
-    loadingRef.current = true;
-    setLoading(true);
-    fetchApi(`trips?${buildTripQuery(pageRef.current, TRIP_PAGE_SIZE, searchParams)}`, "GET",
-      async (response) => {
-        const tripPage: TripPageDto = await response.json();
-        pageRef.current += 1;
-        hasNextRef.current = tripPage.hasNext;
-        setTripList((prev) => [...prev, ...tripPage.trips]);
-        setHasNext(tripPage.hasNext);
-      },
-      setError,
-      (isLoading) => {
-        loadingRef.current = isLoading;
-        setLoading(isLoading);
-      }
-    )
-  }, [searchParams, setError])
-
-  useEffect(() => {
-    loadNextPage();
-    // Only meant to run once on mount, loadNextPage advances its own page/hasNext refs
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  useEffect(() => {
-    const sentinel = sentinelRef.current;
-    if (!sentinel) return;
-
-    const observer = new IntersectionObserver((entries) => {
-      if (entries[0].isIntersecting) {
-        loadNextPage();
-      }
-    });
-    observer.observe(sentinel);
-    return () => observer.disconnect();
-  }, [loadNextPage])
 
   const toggleTripContainer = (id: number) => {
     const newSet = new Set(expandedTrips);
@@ -118,12 +78,12 @@ function TripContainer ({ setError, setNotification, searchParams }: NotifiableC
         setTripList((prev) => prev.filter((trip) => trip.id !== tripId));
         setNotification(t.trip.tripDeleted);
       },
-      setError, setLoading)
+      setError, setDeleting)
   }
 
   return (
     <div className="scroll-container">
-      {loading && <Loading />}
+      {(loading || deleting) && <Loading />}
       <button type="button" onClick={() => navigate("/trips/new")}>
         {t.trip.newTrip}
       </button>
