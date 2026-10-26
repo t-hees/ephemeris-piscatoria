@@ -22,6 +22,10 @@ services:
       TURNSTILE_SECRET: ${TURNSTILE_SECRET:-}
       # Optional, how long accounts of regular users live (ISO-8601 duration, 0 keeps them forever)
       DEMO_USER_TTL: ${DEMO_USER_TTL:-PT1H}
+      # Optional limits for small servers, e.g. JAVA_TOOL_OPTIONS=-Xmx256m
+      JAVA_TOOL_OPTIONS: ${JAVA_TOOL_OPTIONS:-}
+      DB_POOL_SIZE: ${DB_POOL_SIZE:-10}
+      TOMCAT_MAX_THREADS: ${TOMCAT_MAX_THREADS:-200}
     depends_on:
       - db
   frontend:
@@ -39,6 +43,7 @@ services:
   db:
     image: docker.io/library/mariadb:11.8
     restart: unless-stopped
+    command: --innodb-buffer-pool-size=${DB_BUFFER_POOL_SIZE:-128M}
     # Only for local development, the backend reaches the database inside the compose network
     ports:
       - 127.0.0.1:${DB_PORT}:3306
