@@ -1,6 +1,8 @@
 nav {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  justify-items: center;
   align-items: center;
   padding: 10px 30px;
   top: 0;
@@ -9,6 +11,14 @@ nav {
   background-color: var(--color-surface);
   color: var(--color-text);
   z-index: 1000;
+}
+
+nav > :first-child {
+  justify-self: start;
+}
+
+nav > :last-child {
+  justify-self: end;
 }
 
 nav a {
