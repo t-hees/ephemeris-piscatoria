@@ -194,3 +194,24 @@ test('logout and delete account', async ({ page }) => {
   await login(page, user);
   await expect(page.getByText(/^AUTH_FAIL: /)).toBeVisible();
 });
+
+test.describe('first visit', () => {
+  test.use({ storageState: { cookies: [], origins: [] } });
+
+  test('demo notice has to be accepted once', async ({ page }) => {
+    await page.goto('/');
+    const notice = page.getByRole('dialog', { name: 'Hinweis: Demo-Projekt' });
+    await expect(notice).toBeVisible();
+
+    await notice.getByRole('link', { name: 'Datenschutz' }).click();
+    await expect(page.getByRole('heading', { name: 'Datenschutzerklärung' })).toBeVisible();
+    await expect(notice).toBeHidden();
+
+    await page.goBack();
+    await notice.getByRole('button', { name: 'OK, verstanden' }).click();
+    await expect(notice).toBeHidden();
+    await page.reload();
+    await expect(page.getByRole('heading', { name: 'Login' })).toBeVisible();
+    await expect(notice).toBeHidden();
+  });
+});

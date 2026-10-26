@@ -110,6 +110,83 @@ export const de = {
     openPhoto: "Foto öffnen",
     close: "Schließen",
   },
+  legal: {
+    privacy: "Datenschutz",
+    imprint: "Impressum",
+  },
+  demoNotice: {
+    title: "Hinweis: Demo-Projekt",
+    points: [
+      "Diese Website ist ein Portfolio-Projekt und dient ausschließlich zu Demonstrationszwecken. Sie ist nicht für die kommerzielle Nutzung bestimmt.",
+      "Bitte geben Sie keine personenbezogenen Daten ein, z. B. echte Namen, E-Mail-Adressen oder andere Angaben, die Rückschlüsse auf Ihre Person zulassen.",
+      "Neue Accounts werden nach einer Stunde mit allen Daten automatisch gelöscht.",
+      "Aus Sicherheitsgründen ist das Hochladen von Bildern deaktiviert.",
+    ],
+    accept: "OK, verstanden",
+  },
+  privacy: {
+    title: "Datenschutzerklärung",
+    updated: "Stand: Oktober 2026",
+    controllerTitle: "Verantwortlicher",
+    controller: "Verantwortlich für die Datenverarbeitung auf dieser Website im Sinne der Datenschutz-Grundverordnung (DSGVO) ist der im Impressum genannte Betreiber:",
+    sections: [
+      {
+        title: "Allgemeines",
+        paragraphs: [
+          "Diese Website ist ein privates, nicht-kommerzielles Portfolio-Projekt und dient ausschließlich zu Demonstrationszwecken.",
+          "Bitte geben Sie keine personenbezogenen Daten ein, insbesondere keine echten Namen, E-Mail-Adressen oder andere Angaben, die Rückschlüsse auf Ihre Person zulassen. Wählen Sie einen frei erfundenen Benutzernamen.",
+        ],
+      },
+      {
+        title: "Hosting und Server-Logfiles",
+        paragraphs: [
+          "Die Website wird bei einem Hosting-Anbieter in der EU betrieben, mit dem ein Vertrag zur Auftragsverarbeitung nach Art. 28 DSGVO besteht.",
+          "Bei jedem Aufruf verarbeitet der Server automatisch Daten, die Ihr Browser übermittelt: IP-Adresse, Datum und Uhrzeit der Anfrage, aufgerufene Adresse, HTTP-Statuscode, übertragene Datenmenge, Referrer und User-Agent (Browser und Betriebssystem). Diese Daten werden in Server-Logfiles gespeichert und nach 7 Tagen gelöscht.",
+          "Zusätzlich wird die IP-Adresse kurzzeitig im Arbeitsspeicher gehalten, um die Anzahl der Anfragen pro Adresse zu begrenzen.",
+          "Zweck ist der sichere und stabile Betrieb der Website und die Abwehr von Missbrauch. Rechtsgrundlage ist das berechtigte Interesse nach Art. 6 Abs. 1 lit. f DSGVO.",
+        ],
+      },
+      {
+        title: "Benutzerkonto und eingegebene Inhalte",
+        paragraphs: [
+          "Bei der Registrierung werden Ihr Benutzername und Ihr Passwort gespeichert, das Passwort ausschließlich als Hash. Außerdem werden alle Inhalte gespeichert, die Sie eingeben, z. B. Angelausflüge, Orte, Wetterangaben, Fänge und Notizen.",
+          "Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO, da die Daten für die von Ihnen genutzten Funktionen erforderlich sind.",
+          "Demo-Accounts werden eine Stunde nach der Registrierung mit allen zugehörigen Daten automatisch gelöscht. Sie können Ihren Account auch vorher jederzeit auf der Benutzerseite löschen, dabei werden ebenfalls alle Daten gelöscht.",
+        ],
+      },
+      {
+        title: "Cookies und lokaler Speicher",
+        paragraphs: [
+          "Nach dem Login wird ein Cookie mit einem Anmelde-Token gesetzt, das Sie bis zu 24 Stunden angemeldet hält und beim Logout entfernt wird.",
+          "Im lokalen Speicher Ihres Browsers (localStorage) werden Ihre Sprachauswahl und die Bestätigung des Demo-Hinweises gespeichert. Diese Daten verlassen Ihr Gerät nicht.",
+          "Beides ist für die von Ihnen gewünschten Funktionen unbedingt erforderlich (§ 25 Abs. 2 Nr. 2 TDDDG) und benötigt keine Einwilligung. Tracking- oder Analyse-Cookies werden nicht verwendet.",
+        ],
+      },
+      {
+        title: "Cloudflare Turnstile",
+        paragraphs: [
+          "Zum Schutz vor automatisierten Registrierungen verwenden wir im Registrierungsformular den Dienst Turnstile der Cloudflare, Inc., 101 Townsend St., San Francisco, CA 94107, USA. Turnstile wird erst geladen, wenn das Registrierungsformular geöffnet wird. Auf allen anderen Seiten wird keine Verbindung zu Cloudflare hergestellt.",
+          "Dabei werden insbesondere Ihre IP-Adresse sowie Informationen über Browser und Gerät an Cloudflare übermittelt. Zur Prüfung des Ergebnisses sendet unser Server das Turnstile-Token zusammen mit Ihrer IP-Adresse an Cloudflare.",
+          "Rechtsgrundlage ist das berechtigte Interesse am Schutz vor Missbrauch nach Art. 6 Abs. 1 lit. f DSGVO. Dabei können Daten in die USA übermittelt werden. Cloudflare ist unter dem EU-US Data Privacy Framework zertifiziert, für das ein Angemessenheitsbeschluss der EU-Kommission besteht (Art. 45 DSGVO).",
+        ],
+        link: "https://www.cloudflare.com/privacypolicy/",
+      },
+      {
+        title: "Keine weiteren Dienste",
+        paragraphs: [
+          "Es werden keine Analyse- oder Tracking-Dienste, keine Werbung und keine extern geladenen Schriftarten verwendet.",
+        ],
+      },
+      {
+        title: "Ihre Rechte",
+        paragraphs: [
+          "Sie haben das Recht auf Auskunft (Art. 15 DSGVO), Berichtigung (Art. 16 DSGVO), Löschung (Art. 17 DSGVO), Einschränkung der Verarbeitung (Art. 18 DSGVO), Datenübertragbarkeit (Art. 20 DSGVO) und Widerspruch gegen Verarbeitungen auf Grundlage berechtigter Interessen (Art. 21 DSGVO). Wenden Sie sich dazu an die im Impressum genannten Kontaktdaten.",
+          "Außerdem haben Sie das Recht, sich bei einer Datenschutz-Aufsichtsbehörde zu beschweren (Art. 77 DSGVO).",
+          "Die Bereitstellung von Daten ist weder gesetzlich noch vertraglich vorgeschrieben. Eine automatisierte Entscheidungsfindung einschließlich Profiling findet nicht statt.",
+        ],
+      },
+    ],
+  },
 };
 
 export type Translations = typeof de;

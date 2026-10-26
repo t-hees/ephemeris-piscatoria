@@ -110,4 +110,81 @@ export const en: Translations = {
     openPhoto: "Open photo",
     close: "Close",
   },
+  legal: {
+    privacy: "Privacy",
+    imprint: "Legal notice",
+  },
+  demoNotice: {
+    title: "Note: Demo project",
+    points: [
+      "This website is a portfolio project for demonstration purposes only. It is not intended for commercial use.",
+      "Please don't enter any personal information, e.g. real names, email addresses or anything else that could identify you.",
+      "New accounts are deleted automatically with all their data after one hour.",
+      "Uploading images is disabled for safety reasons.",
+    ],
+    accept: "OK, got it",
+  },
+  privacy: {
+    title: "Privacy notice",
+    updated: "Last updated: October 2026",
+    controllerTitle: "Controller",
+    controller: "The controller responsible for data processing on this website under the General Data Protection Regulation (GDPR) is the operator named in the legal notice:",
+    sections: [
+      {
+        title: "General",
+        paragraphs: [
+          "This website is a private, non-commercial portfolio project for demonstration purposes only.",
+          "Please don't enter any personal information, in particular no real names, email addresses or anything else that could identify you. Choose a made-up username.",
+        ],
+      },
+      {
+        title: "Hosting and server log files",
+        paragraphs: [
+          "The website is run by a hosting provider in the EU under a data processing agreement according to Art. 28 GDPR.",
+          "On every request the server automatically processes data sent by your browser: IP address, date and time of the request, requested address, HTTP status code, amount of data transferred, referrer and user agent (browser and operating system). This data is stored in server log files and deleted after 7 days.",
+          "In addition, the IP address is briefly kept in memory to limit the number of requests per address.",
+          "The purpose is the secure and stable operation of the website and the prevention of abuse. The legal basis is legitimate interest according to Art. 6(1)(f) GDPR.",
+        ],
+      },
+      {
+        title: "User account and entered content",
+        paragraphs: [
+          "When you register, your username and password are stored, the password only as a hash. All content you enter is stored as well, e.g. fishing trips, locations, weather, catches and notes.",
+          "The legal basis is Art. 6(1)(b) GDPR, as the data is required for the features you use.",
+          "Demo accounts are deleted automatically with all their data one hour after registration. You can also delete your account at any time before that on the user page, which deletes all its data as well.",
+        ],
+      },
+      {
+        title: "Cookies and local storage",
+        paragraphs: [
+          "After logging in, a cookie with a login token is set that keeps you logged in for up to 24 hours and is removed when you log out.",
+          "Your language choice and the confirmation of the demo notice are kept in your browser's local storage (localStorage). This data doesn't leave your device.",
+          "Both are strictly necessary for the features you request (§ 25(2) no. 2 TDDDG) and don't require consent. No tracking or analytics cookies are used.",
+        ],
+      },
+      {
+        title: "Cloudflare Turnstile",
+        paragraphs: [
+          "To protect against automated registrations, the registration form uses the Turnstile service of Cloudflare, Inc., 101 Townsend St., San Francisco, CA 94107, USA. Turnstile is only loaded once the registration form is opened. No other page connects to Cloudflare.",
+          "In particular, your IP address and information about your browser and device are sent to Cloudflare. To check the result, our server sends the Turnstile token together with your IP address to Cloudflare.",
+          "The legal basis is the legitimate interest in preventing abuse according to Art. 6(1)(f) GDPR. Data may be transferred to the USA. Cloudflare is certified under the EU-US Data Privacy Framework, which is covered by an adequacy decision of the EU Commission (Art. 45 GDPR).",
+        ],
+        link: "https://www.cloudflare.com/privacypolicy/",
+      },
+      {
+        title: "No other services",
+        paragraphs: [
+          "No analytics or tracking services, no advertising and no externally loaded fonts are used.",
+        ],
+      },
+      {
+        title: "Your rights",
+        paragraphs: [
+          "You have the right of access (Art. 15 GDPR), rectification (Art. 16 GDPR), erasure (Art. 17 GDPR), restriction of processing (Art. 18 GDPR), data portability (Art. 20 GDPR) and to object to processing based on legitimate interests (Art. 21 GDPR). To exercise them, use the contact details in the legal notice.",
+          "You also have the right to lodge a complaint with a data protection supervisory authority (Art. 77 GDPR).",
+          "Providing data is neither required by law nor by contract. There is no automated decision-making, including profiling.",
+        ],
+      },
+    ],
+  },
 };

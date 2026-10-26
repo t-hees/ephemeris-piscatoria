@@ -6,6 +6,9 @@ import UserPage from './pages/UserPage.tsx'
 import Home from './pages/Home.tsx'
 import TripForm from './pages/TripForm.tsx'
 import Gallery from './pages/Gallery.tsx'
+import Privacy from './pages/Privacy.tsx'
+import Footer from './components/Footer.tsx'
+import DemoNotice from './components/DemoNotice.tsx'
 import { useEffect } from 'react'
 import { useAuth } from './util/AuthContext.tsx'
 
@@ -34,9 +37,12 @@ export default function App() {
               </>
             )
           }
+          <Route path="/privacy" element={<Privacy />} />
           <Route path="/*" element={<LoginPage />} />
         </Routes>
       </div>
+      <Footer />
+      <DemoNotice />
     </>
   )
 }
