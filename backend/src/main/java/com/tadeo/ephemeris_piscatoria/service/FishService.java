@@ -1,0 +1,101 @@
+package com.tadeo.ephemeris_piscatoria.service;
+
+import java.io.BufferedReader;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import org.springframework.stereotype.Service;
+import org.springframework.util.function.ThrowingSupplier;
+
+import com.tadeo.ephemeris_piscatoria.dto.FishNameMappingDto;
+import com.tadeo.ephemeris_piscatoria.entity.Fish;
+import com.tadeo.ephemeris_piscatoria.repository.FishRepository;
+
+import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
+
+@Service
+@RequiredArgsConstructor
+public class FishService {
+
+    private final FishRepository fishRepository;
+
+    public List<FishNameMappingDto> searchByCommonName(String commonName) {
+        // Escape LIKE wildcards so user input is matched literally (backslash is the default LIKE escape)
+        String escaped = commonName.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_");
+        return fishRepository.searchByCommonName(escaped);
+    }
+
+    public Optional<Fish> findById(Long id) {
+        return fishRepository.findById(id);
+    };
+
+    @Transactional
+    public void initializeFromReader(ThrowingSupplier<BufferedReader> readerSupplier) throws Exception {
+        if (fishRepository.count() == 0) {
+            try (BufferedReader reader = readerSupplier.getWithException()) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    try {
+                        fishRepository.save(parseCsvLine(line));
+                    } catch (Exception e) {
+                        String message = String.format("Failed to persist csv row: %s\n%s", line, e);
+                        throw new RuntimeException(message);
+                    }
+                }
+            }
+        }
+    }
+
+    // Match elements enclosed in literal "
+    private static final Pattern elementPattern = Pattern.compile("\"[^\"]*\"");
+    private static final Pattern arrayItemPattern = Pattern.compile("'[^']*'");
+
+    /*
+    Parses one row of the fishbase csv export, see resources/output.csv for the format
+    */
+    static Fish parseCsvLine(String line) {
+        Fish newFish = new Fish();
+        Matcher matcher = elementPattern.matcher(line);
+        List<String> elements = new ArrayList<>();
+        while (matcher.find()) {
+            elements.add(matcher.group().replace("\"", ""));
+        }
+
+        if (elements.get(0).isEmpty()) throw new IllegalArgumentException("Scientific name must exist");
+        newFish.setScientificName(elements.get(0));
+
+        Set<Fish.Environment> environment = new HashSet<>();
+        matcher = arrayItemPattern.matcher(elements.get(1));
+        while (matcher.find()) {
+            environment.add(Fish.Environment.valueOf(matcher.group().replace("'", "").toUpperCase()));
+        }
+        newFish.setEnvironment(environment);
+
+        newFish.setOccurence(Fish.Occurence.valueOf(elements.get(2).toUpperCase()));
+
+        Set<String> commonNames = new HashSet<>();
+        matcher = arrayItemPattern.matcher(elements.get(3));
+        while (matcher.find()) {
+            commonNames.add(matcher.group().replace("'", ""));
+        }
+        newFish.setCommonNames(commonNames);
+
+        String abbundance = elements.get(4).toUpperCase().replace(" ", "_");
+        if (!abbundance.isEmpty()) {
+            newFish.setAbundance(Fish.Abbundance.valueOf(abbundance));
+        }
+
+        String maxLength = elements.get(5);
+        if (!maxLength.isEmpty()) {
+            newFish.setMaxLength(maxLength);
+        }
+
+        return newFish;
+    }
+}

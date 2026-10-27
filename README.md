@@ -1,7 +1,7 @@
 # Project Details
 
 ## Project Description
-Fish-project is a WIP web-application for documenting fishing trips.
+`Ephemeris Piscatoria` is a WIP web-application for documenting fishing trips.
 The interface is available in english and german, but currently only german fish
 and fish-names are stored in the database.
 

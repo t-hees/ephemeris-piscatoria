@@ -9,10 +9,10 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.tadeo</groupId>
-	<artifactId>fish-project</artifactId>
+	<artifactId>ephemeris-piscatoria</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>fish-project</name>
-	<description>Backend for fish-project</description>
+	<name>ephemeris-piscatoria</name>
+	<description>Backend for ephemeris-piscatoria</description>
 	<url/>
 	<licenses>
 		<license/>

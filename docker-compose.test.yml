@@ -1,4 +1,4 @@
-name: fish-project-test
+name: ephemeris-piscatoria-test
 
 services:
   test-backend:

@@ -1,4 +1,4 @@
-name: fish-project-e2e
+name: ephemeris-piscatoria-e2e
 
 services:
   e2e-backend:
