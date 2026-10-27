@@ -57,7 +57,7 @@ to the backend inside the compose network. Frontend and api therefore share one 
 and the app works under any host name the frontend is reached by.
 
 | Target          | Description                                   |
-|-----------------+-----------------------------------------------|
+|-----------------|-----------------------------------------------|
 | `make up`       | Build and start the stack in the background   |
 | `make down`     | Stop the stack, keeps the database volume     |
 | `make restart`  | Rebuild and restart the stack                 |
@@ -151,7 +151,7 @@ make e2e-test
 
 ## Cleanup
 | Target              | Description                                   |
-|---------------------+-----------------------------------------------|
+|---------------------|-----------------------------------------------|
 | `make clean`        | Remove build output and test reports          |
 | `make docker-clean` | Remove leftover test and e2e containers       |
 | `make clean-all`    | Run clean and docker-clean                    |
