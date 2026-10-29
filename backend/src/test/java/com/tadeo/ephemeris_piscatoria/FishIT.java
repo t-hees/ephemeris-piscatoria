@@ -11,6 +11,7 @@ import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureTestRestTemplate;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.context.annotation.Import;
@@ -29,6 +30,7 @@ import com.tadeo.ephemeris_piscatoria.util.TestFishUtils;
 import com.tadeo.ephemeris_piscatoria.util.TestUtils;
 
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
+@AutoConfigureTestRestTemplate
 @Import(SecurityNoAuthTestConfig.class)
 @ActiveProfiles({"test", "no_auth"})
 class FishIT {

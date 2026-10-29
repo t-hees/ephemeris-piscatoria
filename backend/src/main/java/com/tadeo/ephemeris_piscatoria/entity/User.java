@@ -14,7 +14,6 @@ import jakarta.persistence.MapKeyColumn;
 import lombok.*;
 import org.springframework.security.core.CredentialsContainer;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.SpringSecurityCoreVersion;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.util.Assert;
@@ -39,7 +38,7 @@ public class User implements UserDetails, CredentialsContainer {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     protected Long id;
 
-    private static final long serialVersionUID = SpringSecurityCoreVersion.SERIAL_VERSION_UID;
+    private static final long serialVersionUID = 1L;
 
     @Column(unique = true)
     private String username;

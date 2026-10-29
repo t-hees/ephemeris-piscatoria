@@ -14,6 +14,7 @@ import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureTestRestTemplate;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpHeaders;
@@ -37,6 +38,7 @@ import com.tadeo.ephemeris_piscatoria.util.TestUserAuth;
 import com.tadeo.ephemeris_piscatoria.util.TestUtils;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@AutoConfigureTestRestTemplate
 @ActiveProfiles("test")
 class SpecialCatchIT {
 
@@ -196,8 +198,8 @@ class SpecialCatchIT {
     void testRejectsTooLargeImages() {
         byte[] tooLarge = new byte[10 * 1024 * 1024 + 1];
         ApiError error = expectRejected(specialCatchParts(new SpecialCatchDto(someFishId, null, null, null, null), tooLarge),
-            HttpStatus.PAYLOAD_TOO_LARGE);
-        assertEquals("PAYLOAD_TOO_LARGE", error.code());
+            HttpStatus.CONTENT_TOO_LARGE);
+        assertEquals("CONTENT_TOO_LARGE", error.code());
         assertTrue(getSpecialCatches().isEmpty(), "Rejected catches must not be saved");
     }
 
