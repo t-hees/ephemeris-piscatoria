@@ -41,7 +41,7 @@ services:
     depends_on:
       - backend
   db:
-    image: docker.io/library/mariadb:11.8
+    image: docker.io/library/mariadb:12.3
     restart: unless-stopped
     command: --innodb-buffer-pool-size=${DB_BUFFER_POOL_SIZE:-128M}
     # Only for local development, the backend reaches the database inside the compose network

@@ -1,4 +1,4 @@
-FROM docker.io/library/maven:3.9.11 AS build
+FROM docker.io/library/maven:3.9.16 AS build
 WORKDIR /app
 COPY pom.xml ./
 RUN mvn dependency:go-offline -B

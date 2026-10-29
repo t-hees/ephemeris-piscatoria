@@ -39,7 +39,7 @@ services:
     depends_on:
       - e2e-backend
   e2e-db:
-    image: docker.io/library/mariadb:11.8
+    image: docker.io/library/mariadb:12.3
     environment:
       MYSQL_ROOT_PASSWORD: rootpass
       MYSQL_DATABASE: e2edatabase
