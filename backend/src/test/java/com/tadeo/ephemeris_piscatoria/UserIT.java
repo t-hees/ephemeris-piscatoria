@@ -107,9 +107,15 @@ class UserIT {
     }
 
     private static HttpHeaders cookieHeadersOf(ResponseEntity<?> response) {
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add(HttpHeaders.COOKIE, response.getHeaders().getFirst(HttpHeaders.SET_COOKIE));
-        return httpHeaders;
+        return TestUserAuth.withCsrf(authCookieOf(response));
+    }
+
+    // Requests without csrf cookie also get a new XSRF-TOKEN cookie set
+    private static String authCookieOf(ResponseEntity<?> response) {
+        return response.getHeaders().getOrEmpty(HttpHeaders.SET_COOKIE).stream()
+            .filter(cookie -> cookie.startsWith("AUTH_TOKEN="))
+            .findFirst()
+            .orElse(null);
     }
 
     private ApiError expectAuthFail(String url, HttpMethod method, Object data, HttpHeaders headers,
@@ -178,8 +184,8 @@ class UserIT {
         ResponseEntity<UserInfoDto> response = performLogin(userDto);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(userDto.username(), response.getBody().username());
-        String cookie = response.getHeaders().getFirst(HttpHeaders.SET_COOKIE);
-        assertTrue(cookie != null && cookie.startsWith("AUTH_TOKEN="), "Login didn't set auth cookie");
+        String cookie = authCookieOf(response);
+        assertTrue(cookie != null, "Login didn't set auth cookie");
         assertTrue(cookie.contains("HttpOnly"), "Auth cookie must be HttpOnly");
     }
 
@@ -246,6 +252,20 @@ class UserIT {
             exchange("/api/trips", HttpMethod.GET, null, new HttpHeaders()).getStatusCode());
         assertEquals(HttpStatus.UNAUTHORIZED,
             exchange("/api/fish?name=aal", HttpMethod.GET, null, new HttpHeaders()).getStatusCode());
+    }
+
+    @Test
+    void testWritesWithoutCsrfTokenAreRejected() {
+        HttpHeaders authOnly = new HttpHeaders();
+        authOnly.add(HttpHeaders.COOKIE, authCookieOf(performLogin(userDto)));
+        HttpHeaders mismatched = performLoginAndGetHeaders(userDto);
+        mismatched.set("X-XSRF-TOKEN", "other-token");
+
+        for (HttpHeaders headers : List.of(authOnly, mismatched)) {
+            assertEquals(HttpStatus.FORBIDDEN, exchange(currentUserUrl + "/password", HttpMethod.PUT,
+                new UserPasswordDto(userDto.password(), "newpassword"), headers).getStatusCode());
+        }
+        assertEquals(HttpStatus.OK, getCurrentUserStatus(authOnly), "Reads don't need a csrf token");
     }
 
     @ParameterizedTest
