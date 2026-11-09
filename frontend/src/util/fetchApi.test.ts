@@ -40,9 +40,26 @@ describe("fetchApi", () => {
     expect(fetchMock).toHaveBeenCalledWith(apiPath + "trips/1/special-catches", {
       method: "POST",
       credentials: "include",
-      headers: undefined,
+      headers: {},
       body: form,
     });
+  });
+
+  it("echoes the csrf cookie as header on writes only", async () => {
+    document.cookie = "XSRF-TOKEN=abc";
+    try {
+      const { fetchMock, done } = callFetchApi(jsonResponse({}), { id: 1 });
+      await done;
+      expect(fetchMock).toHaveBeenLastCalledWith(apiPath + "trips", expect.objectContaining({
+        headers: { "Content-Type": "application/json", "X-XSRF-TOKEN": "abc" },
+      }));
+
+      const get = callFetchApi(jsonResponse({}));
+      await get.done;
+      expect(get.fetchMock).toHaveBeenLastCalledWith(apiPath + "trips", expect.objectContaining({ headers: {} }));
+    } finally {
+      document.cookie = "XSRF-TOKEN=; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+    }
   });
 
   it("passes successful responses on and stops loading", async () => {

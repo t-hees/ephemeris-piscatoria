@@ -12,6 +12,14 @@ type ApiError = {
 // Relative, the serving nginx (or the vite dev server) proxies /api to the backend
 const apiPath = "/api/";
 
+const csrfCookie = "XSRF-TOKEN=";
+
+// The backend rejects writes that don't echo its csrf cookie as header
+function csrfHeader(): Record<string, string> {
+  const token = document.cookie.split("; ").find(cookie => cookie.startsWith(csrfCookie));
+  return token ? {"X-XSRF-TOKEN": token.slice(csrfCookie.length)} : {};
+}
+
 /**
  * @param body Sent as json, or as multipart/form-data for FormData
  */
@@ -21,7 +29,10 @@ export async function fetchApi(relPath: string, method: FetchMethod,
 
   const isJson = body !== undefined && !(body instanceof FormData);
   // FormData bodies get their multipart content type with boundary from fetch itself
-  const requestHeaders = isJson ? {"Content-Type": "application/json"} : undefined;
+  const requestHeaders = {
+    ...(isJson ? {"Content-Type": "application/json"} : {}),
+    ...(method !== "GET" ? csrfHeader() : {}),
+  };
   return fetch(apiPath + relPath, {
     method: method,
     credentials: "include",

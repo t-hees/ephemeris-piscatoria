@@ -35,6 +35,8 @@ public class TestUserAuth {
     @Autowired
     TestUtils testUtils;
 
+    public static final String csrfToken = "test-csrf-token";
+
     public static HttpHeaders cookieHeaders(String authToken) {
         ResponseCookie cookie = ResponseCookie.from("AUTH_TOKEN", authToken)
             .httpOnly(true)
@@ -43,9 +45,16 @@ public class TestUserAuth {
             .sameSite("Strict")
             .maxAge(Duration.ofHours(24))
             .build();
+        return withCsrf(cookie.toString());
+    }
 
+    /*
+    Sends the given cookies along with a csrf token as cookie and header, any matching pair passes the csrf check
+    */
+    public static HttpHeaders withCsrf(String cookies) {
         HttpHeaders headers = new HttpHeaders();
-        headers.add(HttpHeaders.COOKIE, cookie.toString());
+        headers.add(HttpHeaders.COOKIE, cookies + "; XSRF-TOKEN=" + csrfToken);
+        headers.add("X-XSRF-TOKEN", csrfToken);
         return headers;
     }
 

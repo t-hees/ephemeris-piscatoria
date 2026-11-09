@@ -1,6 +1,7 @@
 package com.tadeo.ephemeris_piscatoria.config;
 
 import com.tadeo.ephemeris_piscatoria.service.UserService;
+import com.tadeo.ephemeris_piscatoria.util.CsrfCookieFilter;
 import com.tadeo.ephemeris_piscatoria.util.JwtAuthFilter;
 
 import org.springframework.context.annotation.Bean;
@@ -17,6 +18,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.csrf.CsrfFilter;
 
 import lombok.RequiredArgsConstructor;
 
@@ -37,7 +39,11 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity
-            .csrf(httpSecurityCsrfConfigurer -> httpSecurityCsrfConfigurer.disable())
+            // The auth cookie is sent by the browser automatically, so writes need the XSRF-TOKEN cookie echoed as header.
+            // Login and register don't use the auth cookie and only accept json, logout only clears it
+            .csrf(csrf -> csrf
+                .spa()
+                .ignoringRequestMatchers("/api/auth/**"))
             .httpBasic(http -> http.disable())
             .formLogin(form -> form.disable())
             .authorizeHttpRequests(
@@ -46,10 +52,13 @@ public class SecurityConfig {
                     .requestMatchers("/api/auth/**").permitAll()
                     .anyRequest().authenticated()
             )
-            // Missing or invalid auth cookies are 401 instead of spring security's default 403
+            // Missing or invalid auth cookies are 401 instead of spring security's default 403.
+            // Csrf failures set their 403 directly, the default error forward to /error would turn them into 401
             .exceptionHandling(exceptions -> exceptions
-                .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
+                .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
+                .accessDeniedHandler((request, response, e) -> response.setStatus(HttpStatus.FORBIDDEN.value())))
             .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .addFilterAfter(new CsrfCookieFilter(), CsrfFilter.class)
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
         return httpSecurity.build();
     }
